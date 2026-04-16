@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unicompass - عرض التفاصيل</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#73757d",
+                    "secondary-fixed-dim": "#b4c1ff",
+                    "on-primary-fixed": "#000000",
+                    "on-primary-container": "#00214f",
+                    "on-tertiary-fixed": "#00481b",
+                    "background": "#0b0e14",
+                    "surface-container-highest": "#22262f",
+                    "on-primary-fixed-variant": "#002a61",
+                    "surface-tint": "#85adff",
+                    "primary-container": "#6d9fff",
+                    "on-primary": "#002c65",
+                    "surface-container-low": "#10131a",
+                    "surface-container-high": "#1c2028",
+                    "secondary-dim": "#7f98ff",
+                    "surface-container-lowest": "#000000",
+                    "surface": "#0b0e14",
+                    "primary-fixed": "#6d9fff",
+                    "tertiary": "#b7ffbc",
+                    "on-secondary-fixed": "#00288d",
+                    "surface-variant": "#22262f",
+                    "tertiary-fixed-dim": "#78e98b",
+                    "error": "#ff716c",
+                    "on-secondary-fixed-variant": "#2c48ac",
+                    "surface-container": "#161a21",
+                    "on-error": "#490006",
+                    "primary": "#85adff",
+                    "primary-dim": "#689cff",
+                    "on-surface-variant": "#a9abb3",
+                    "secondary": "#7f98ff",
+                    "on-secondary": "#00185e",
+                    "surface-bright": "#282c36",
+                    "inverse-on-surface": "#52555c",
+                    "secondary-container": "#203da1",
+                    "primary-fixed-dim": "#5291ff",
+                    "tertiary-fixed": "#86f898",
+                    "tertiary-container": "#86f898",
+                    "inverse-primary": "#005bc2",
+                    "tertiary-dim": "#78e98b",
+                    "on-error-container": "#ffa8a3",
+                    "on-surface": "#ecedf6",
+                    "outline-variant": "#45484f",
+                    "secondary-fixed": "#c7cfff",
+                    "on-tertiary": "#006729",
+                    "on-tertiary-container": "#005d25",
+                    "on-secondary-container": "#c5ceff",
+                    "error-dim": "#d7383b",
+                    "error-container": "#9f0519",
+                    "inverse-surface": "#f9f9ff",
+                    "on-background": "#ecedf6",
+                    "surface-dim": "#0b0e14",
+                    "on-tertiary-fixed-variant": "#00682a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Sans Arabic", "Plus Jakarta Sans"],
+                    "body": ["Noto Sans Arabic", "Plus Jakarta Sans"],
+                    "label": ["Noto Sans Arabic", "Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#10131A] flex items-center justify-between px-6 py-4 shadow-none">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img alt="Student profile picture" data-alt="close-up portrait of a young Tunisian student smiling, soft studio lighting, modern tech aesthetic background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCec7TftxAJm6z8FknlRJ9_8PEoyXpWv5oEcqrZiB6KVEHtSXYPNyVyL3Ru4FENBRMCrPPoDU_rG1NEp9UYAL-A73k3IYnm1U7gw100KthL2UnCtvexR-WCWsOfnzqR8SqgARDGLQwwe4hgZr2f0HyOLbSlOrJVYP1zNueIiZ1C2YNei7_DFLkOolouF33F3eLcB6LZavxGqFDfdiHHFDFIOpBvQBUvzWIEuWCRElsFCQeTElOqTEu6zcNippFTRLT-bB01osDS1JQ2"/>
+</div>
+<h1 class="text-[#85ADFF] font-black tracking-tighter italic text-xl">Unicompass</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#ECEDF6] active:scale-95 transition-transform">notifications</span>
+</div>
+</header>
+<main class="pt-20 px-4 md:px-8 max-w-4xl mx-auto">
+<!-- Hero Section -->
+<section class="relative h-64 rounded-3xl overflow-hidden mb-8 group">
+<img alt="INSAT Tunis Campus" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="modern brutalist architecture of an engineering school in Tunisia, wide angle shot, dramatic morning shadows, palm trees in foreground" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-vejHv5v3FkZhMdtEnIpbn68kodkmxq7uGDVpTmik1HhFxT8xVr1JWKno3zmU0SJHItbQoAuSCxDjgckX6BQXMUAPun-1dxUMV-i6mICsvhQ0j8e2trOvbqZwjowZX0MoSny_NdxBuExRnyBc-HlTDEn5T85pZ_lbZUeawLvHKTJCBORTM-wHsbZ_H2EZiB8C8BRLtVwuWVIxiaercT6dL-rhtQ_FIQB-1KjVg1agePS9yTc8B5F902s0ZLF7efK1suvzt-nlNBzH"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
+<div class="absolute bottom-6 right-6 text-right">
+<h2 class="text-4xl font-extrabold tracking-tight text-on-surface mb-1">INSAT تونس</h2>
+<div class="flex items-center gap-2 text-primary font-medium justify-end">
+<span class="text-sm">المركز العمراني الشمالي</span>
+<span class="material-symbols-outlined text-sm">location_on</span>
+</div>
+</div>
+</section>
+<!-- Stats Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+<!-- Scorek Card -->
+<div class="bg-surface-container-low p-6 rounded-2xl relative overflow-hidden">
+<div class="absolute top-0 left-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -ml-16 -mt-16"></div>
+<span class="text-on-surface-variant text-sm uppercase tracking-widest font-bold">سكورك إنتي</span>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-5xl font-black text-primary">172.4</span>
+<span class="text-on-surface-variant font-medium">نقطة</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-xs font-semibold uppercase tracking-tight">مترشح قوي</span>
+</div>
+</div>
+<!-- Comparison Graph Card -->
+<div class="bg-surface-container-high p-6 rounded-2xl">
+<span class="text-on-surface-variant text-sm uppercase tracking-widest font-bold">مقارنة مع 2023</span>
+<div class="mt-6 flex flex-col gap-4">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span>سكورك</span>
+<span class="text-primary">172.4</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2.5">
+<div class="bg-primary h-2.5 rounded-full" style="width: 85%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold mb-1">
+<span>آخر واحد تقبل 2023</span>
+<span class="text-on-surface-variant">168.2</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-2.5">
+<div class="bg-on-surface-variant h-2.5 rounded-full" style="width: 78%"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Info / AI Mentor -->
+<section class="bg-surface-container-low p-6 rounded-2xl mb-8 border-r-4 border-tertiary">
+<div class="flex gap-4 items-start">
+<div class="p-3 bg-tertiary/10 rounded-xl shrink-0">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h3 class="text-lg font-bold text-on-surface">نصيحة المنطور</h3>
+<p class="text-on-surface-variant leading-relaxed mt-1">
+                        INSAT هي أقوى توة في تونس للإعلامية. سكورك طيارة وعندك شانس كبيرة باش تتقبل. *صفي الاختيارات* متاعك وحطها الأولى.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<section class="flex flex-col sm:flex-row gap-4 mb-12">
+<button class="flex-1 bg-primary text-on-primary font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(133,173,255,0.15)] active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                خليلي في الفافوري
+            </button>
+<button class="flex-1 bg-surface-container-high text-on-surface font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 border border-outline-variant/30 active:scale-95 transition-all">
+<span class="material-symbols-outlined">map</span>
+                شوفها في المابس
+            </button>
+</section>
+<!-- Academic Details (Bento Grid Style) -->
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div class="bg-surface-container p-4 rounded-xl flex flex-col gap-1">
+<span class="text-on-surface-variant text-[10px] font-bold uppercase">المدة</span>
+<span class="text-on-surface font-bold">5 سنين</span>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex flex-col gap-1">
+<span class="text-on-surface-variant text-[10px] font-bold uppercase">الدبلوم</span>
+<span class="text-on-surface font-bold">مهندس</span>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex flex-col gap-1">
+<span class="text-on-surface-variant text-[10px] font-bold uppercase">البلاصة</span>
+<span class="text-on-surface font-bold">تونس</span>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex flex-col gap-1">
+<span class="text-on-surface-variant text-[10px] font-bold uppercase">المبيت</span>
+<span class="text-on-surface font-bold">موجود</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-[#0B0E14]/60 backdrop-blur-xl border-t border-[#1C2028]/15 shadow-[0_-4px_40px_rgba(28,32,40,0.15)] z-50 rounded-t-3xl">
+<div class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90">
+<span class="material-symbols-outlined">grade</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#85ADFF] after:content-[''] after:w-1.5 after:h-1.5 after:bg-[#85ADFF] after:rounded-full after:mt-1 active:scale-90">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90">
+<span class="material-symbols-outlined">explore</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Unicompass - قائمة التوجيهات</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#73757d",
+                    "secondary-fixed-dim": "#b4c1ff",
+                    "on-primary-fixed": "#000000",
+                    "on-primary-container": "#00214f",
+                    "on-tertiary-fixed": "#00481b",
+                    "background": "#0b0e14",
+                    "surface-container-highest": "#22262f",
+                    "on-primary-fixed-variant": "#002a61",
+                    "surface-tint": "#85adff",
+                    "primary-container": "#6d9fff",
+                    "on-primary": "#002c65",
+                    "surface-container-low": "#10131a",
+                    "surface-container-high": "#1c2028",
+                    "secondary-dim": "#7f98ff",
+                    "surface-container-lowest": "#000000",
+                    "surface": "#0b0e14",
+                    "primary-fixed": "#6d9fff",
+                    "tertiary": "#b7ffbc",
+                    "on-secondary-fixed": "#00288d",
+                    "surface-variant": "#22262f",
+                    "tertiary-fixed-dim": "#78e98b",
+                    "error": "#ff716c",
+                    "on-secondary-fixed-variant": "#2c48ac",
+                    "surface-container": "#161a21",
+                    "on-error": "#490006",
+                    "primary": "#85adff",
+                    "primary-dim": "#689cff",
+                    "on-surface-variant": "#a9abb3",
+                    "secondary": "#7f98ff",
+                    "on-secondary": "#00185e",
+                    "surface-bright": "#282c36",
+                    "inverse-on-surface": "#52555c",
+                    "secondary-container": "#203da1",
+                    "primary-fixed-dim": "#5291ff",
+                    "tertiary-fixed": "#86f898",
+                    "tertiary-container": "#86f898",
+                    "inverse-primary": "#005bc2",
+                    "tertiary-dim": "#78e98b",
+                    "on-error-container": "#ffa8a3",
+                    "on-surface": "#ecedf6",
+                    "outline-variant": "#45484f",
+                    "secondary-fixed": "#c7cfff",
+                    "on-tertiary": "#006729",
+                    "on-tertiary-container": "#005d25",
+                    "on-secondary-container": "#c5ceff",
+                    "error-dim": "#d7383b",
+                    "error-container": "#9f0519",
+                    "inverse-surface": "#f9f9ff",
+                    "on-background": "#ecedf6",
+                    "surface-dim": "#0b0e14",
+                    "on-tertiary-fixed-variant": "#00682a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Noto Sans Arabic", "Plus Jakarta Sans"],
+                    "body": ["Noto Sans Arabic", "Plus Jakarta Sans"],
+                    "label": ["Noto Sans Arabic", "Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(22, 26, 33, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0B0E14] flex items-center justify-between px-6 py-4 shadow-none">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img alt="Student profile picture" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNvRiiqXMP9RMQzYgAqJd5X3o0qs0nYJWT47N8KVNYvH2forFztyEXqkRsJ9LNDjvCB5-s92xAMAf0t6fHwlQ89A7YEkI6PnYbHey01mC0mkkL6cJogtHvLACwpiWYtSbhQy5a3fPnpQc8khorr9E0qbpL0yx1aqlKO2f6-b2t_JZu8JO6uZ-w3boZpSWl7iaJLFvpehBX7FS0w9X36oT4d8TF4nYNxWYheX-AJnVDaHM84FB78dIZ5SD4iD7FlP0BWj5xyjUUrC2Y"/>
+</div>
+<span class="text-[#85ADFF] font-black tracking-tighter italic text-xl">Unicompass</span>
+</div>
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-[#85ADFF] hover:bg-[#1C2028] transition-colors duration-300 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Hero Section -->
+<section class="mb-10 text-right">
+<h1 class="text-[2.5rem] font-bold leading-tight tracking-tight mb-2 text-on-surface">
+                أحسن اختيارات ليك
+            </h1>
+<p class="text-on-surface-variant text-lg leading-relaxed">
+                هذوم التوجيهات اللي يجيوا مع سكورك وطموحاتك. صفّي الاختيارات واختار اللي يساعدك.
+            </p>
+</section>
+<!-- Recommendation List -->
+<div class="flex flex-col gap-6">
+<!-- Card 1: GENIE LOGICIEL - INSAT -->
+<div class="group relative bg-surface-container-low rounded-[1.5rem] overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:bg-surface-container-high border border-transparent hover:border-outline-variant/10">
+<div class="p-6">
+<div class="flex items-start justify-between mb-4">
+<div class="flex gap-4">
+<div class="w-14 h-14 bg-surface-container-highest rounded-2xl flex items-center justify-center p-2">
+<img alt="INSAT Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn8kytTAn6pMwPjNrf1NooSNv51xOP5w-a_p8yxZ8VGsaOhBqMvBOiz8XUibbHAHfboCxR1AsAnXHniq8C2pses42QPpzIuwBq-tWQ7jjqcg215nGZfWqpiBDLgWbmwtHHoN6eq-icq8YYNPtG_1miI8tsPOqdlL7T2xkeZDeBipAY9tNnLjz2YmA-Yexc8RYwEb7LZh2byGK4Odh3ZyAdiKqcVdtu8f-cSxCJ7GhgClcVsYWOV3DHstDYXOdME8gWUTRbh9MLN9xJ"/>
+</div>
+<div>
+<h3 class="text-xl font-bold text-on-surface">هندسة البرمجيات</h3>
+<p class="text-primary font-medium tracking-wide">المعهد العالي للعلوم التطبيقية والتكنولوجيا</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="text-tertiary font-black text-2xl">98%</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">نسبة المطابقة</div>
+</div>
+</div>
+<!-- AI Insight Bubble -->
+<div class="bg-tertiary/10 rounded-2xl p-4 flex gap-3 items-start border-r-4 border-tertiary">
+<span class="material-symbols-outlined text-tertiary text-xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-tertiary uppercase mb-1">رؤية الذكاء الاصطناعي</span>
+<p class="text-sm text-on-surface leading-snug">
+                                سكورك في المات يخليك تنجح فيه بالباهي. INSAT هي البلاصة الصحيحة باش تطلق فيه.
+                            </p>
+</div>
+</div>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                5 سنوات
+                            </div>
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                تونس
+                            </div>
+</div>
+<button class="bg-primary text-on-primary px-5 py-2 rounded-full font-bold text-sm hover:shadow-[0_0_15px_rgba(133,173,255,0.3)] transition-all active:scale-95">
+                            شوف البرنامج
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 2: CYBERSECURITY - ENIT -->
+<div class="group relative bg-surface-container-low rounded-[1.5rem] overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:bg-surface-container-high">
+<div class="p-6">
+<div class="flex items-start justify-between mb-4">
+<div class="flex gap-4">
+<div class="w-14 h-14 bg-surface-container-highest rounded-2xl flex items-center justify-center p-2">
+<img alt="ENIT Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqth9zwyAd0uuqKzlNjM5Ch-K3giiYLKkIeV6afaFjMZXkj_q2eTc3hxTwMHVD70ZXB1phh5ti_ZTzCx5FRSI6HuwFXV54JTwTpGo-jRq5TV35X3y17lRzwVF3x48unUyi-25oM-LxxF8nbhT5jYCQyjphBPprF0zyqPl_bL9PkGTRpfJd55z2AuF79pdvdeA7gNYpqUWHK80zq7SFVMF2Gw7QUZOeSwaWGXpNCdaOH3Oxs6uXurV-wZ7HNWfnqrx8jEhLB44i2Scf"/>
+</div>
+<div>
+<h3 class="text-xl font-bold text-on-surface">سلامة النظم المعلوماتية</h3>
+<p class="text-primary font-medium tracking-wide">المدرسة الوطنية للمهندسين بتونس</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="text-tertiary font-black text-2xl">92%</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">نسبة المطابقة</div>
+</div>
+</div>
+<div class="bg-surface-container-highest/50 rounded-2xl p-4 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary text-xl">psychology</span>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-primary uppercase mb-1">رؤية الذكاء الاصطناعي</span>
+<p class="text-sm text-on-surface leading-snug">
+                                البروفيل متاعك فيه برشة لوجيك. ENIT باش تعطيك فورماسيون صحيحة في الـ base technique.
+                            </p>
+</div>
+</div>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                3 سنوات
+                            </div>
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                تونس
+                            </div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-5 py-2 rounded-full font-bold text-sm hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+                            شوف البرنامج
+                        </button>
+</div>
+</div>
+</div>
+<!-- Card 3: DATA SCIENCE - FST -->
+<div class="group relative bg-surface-container-low rounded-[1.5rem] overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:bg-surface-container-high">
+<div class="p-6">
+<div class="flex items-start justify-between mb-4">
+<div class="flex gap-4">
+<div class="w-14 h-14 bg-surface-container-highest rounded-2xl flex items-center justify-center p-2">
+<img alt="FST Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7dQpzsWXGin26DxAmB6F3QVbd11N7sIDI5rU9VWYEfkj5zj095N_Y18zRvOTEMSuoibai0_oV-F8dkfD60LL-nyBzhTOh9NheS3bEVCFHMps92drXNiZ8Pc36VDosPBJjH2HYLVIS2aovyxnbuBInzQOKogwX1JxrRJN7dDWXPB-O_3NZHxPHEbh9U054GUDVzC0fN55Bu1xGGEp1rtwtgKpggMCBENgEPpd3_q1U27umOZh8w1vGfRgqnRVwFFLvZL7aUJFgxdPl"/>
+</div>
+<div>
+<h3 class="text-xl font-bold text-on-surface">علم البيانات</h3>
+<p class="text-primary font-medium tracking-wide">كلية العلوم بتونس</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="text-tertiary font-black text-2xl">85%</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">نسبة المطابقة</div>
+</div>
+</div>
+<div class="bg-surface-container-highest/50 rounded-2xl p-4 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary text-xl">analytics</span>
+<div class="flex flex-col">
+<span class="text-[10px] font-bold text-primary uppercase mb-1">رؤية الذكاء الاصطناعي</span>
+<p class="text-sm text-on-surface leading-snug">
+                                تعجبك الـ Stat؟ FST عندهم أحسن مخابر للـ Data Science في تونس.
+                            </p>
+</div>
+</div>
+<div class="mt-6 flex items-center justify-between">
+<div class="flex gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                                3 سنوات
+                            </div>
+<div class="flex items-center gap-1.5 text-on-surface-variant text-xs">
+<span class="material-symbols-outlined text-sm">location_on</span>
+                                المنار
+                            </div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-5 py-2 rounded-full font-bold text-sm hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+                            شوف البرنامج
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-[#0B0E14]/60 backdrop-blur-xl border-t border-[#1C2028]/15 shadow-[0_-4px_40px_rgba(28,32,40,0.15)] rounded-t-3xl z-50">
+<a class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">school</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#85ADFF] after:content-[''] after:w-1.5 after:h-1.5 after:bg-[#85ADFF] after:rounded-full after:mt-1 active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grade</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#ECEDF6]/60 hover:text-[#85ADFF] transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined">explore</span>
+</a>
+</nav>
+</body></html>
