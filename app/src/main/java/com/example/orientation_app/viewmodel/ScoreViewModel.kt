@@ -16,8 +16,7 @@ data class ScoreUiState(
     val sectionId: String = "",
     val subjectGrades: Map<String, String> = defaultSubjectGrades(),
     val fgScore: Double = 0.0,
-    val computedAverage: Double = 0.0,
-    val scoreWithRegionalBonus: Double = 0.0
+    val computedAverage: Double = 0.0
 )
 
 private fun defaultSubjectGrades(): Map<String, String> = linkedMapOf(
@@ -70,12 +69,10 @@ class ScoreViewModel : ViewModel() {
 
         val computedMoyenne = formula.averageFromSubjects(state.subjectGrades)
         val fg = (computedMoyenne * 4.0) + formula.specialtyComponent(state.subjectGrades)
-        val score7 = fg * 1.07
 
         return state.copy(
             computedAverage = computedMoyenne,
-            fgScore = fg,
-            scoreWithRegionalBonus = score7
+            fgScore = fg
         )
     }
 

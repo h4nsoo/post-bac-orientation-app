@@ -1,10 +1,8 @@
 package com.example.orientation_app.ui.screens.score
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,13 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Calculate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,17 +35,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.orientation_app.R
 import com.example.orientation_app.ui.theme.DarkCard
 import com.example.orientation_app.ui.theme.DarkCardBorder
 import com.example.orientation_app.ui.theme.InputFieldBg
@@ -86,6 +78,7 @@ fun ScoreEntryScreen(
     }
 
     val state by viewModel.uiState.collectAsState()
+    val canProceed = state.subjectGrades.values.all { it.isNotBlank() }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -111,10 +104,17 @@ fun ScoreEntryScreen(
                 onGradeChange = viewModel::updateSubjectGrade
             )
             Spacer(Modifier.height(28.dp))
-            FilterButton(onClick = onFilterClick)
+            FilterButton(
+                enabled = canProceed,
+                onClick = onFilterClick
+            )
             Spacer(Modifier.height(10.dp))
             Text(
-                text = "كمّل صبّ الأعداد باش نوريوك الفاكولتات",
+                text = if (canProceed) {
+                    "كمّل صبّ الأعداد باش نوريوك الفاكولتات"
+                } else {
+                    "لازم تعمّر كلّ الأعداد قبل المواصلة"
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = TextMuted,
                 textAlign = TextAlign.Center,
@@ -168,54 +168,24 @@ private fun subjectsForSection(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Top bar – app logo (from drawables) + Unicompass brand + bell icon
+// Top bar
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun ScoreTopBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Logo + brand name (start side = right in RTL)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(CircleShape)) {
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "شعار يونيكومباس",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .graphicsLayer(scaleX = 1.35f, scaleY = 1.35f)
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = "Unicompass",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+        // Back action
+        IconButton(onClick = onBackClick) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "رجوع",
+                tint = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.size(24.dp)
             )
-        }
-
-        // Actions (end side = left in RTL)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(
-                    imageVector = Icons.Filled.Notifications,
-                    contentDescription = "الإشعارات",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "رجوع",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
         }
     }
 }
@@ -233,7 +203,7 @@ private fun ScoreHeader() {
     )
     Spacer(Modifier.height(6.dp))
     Text(
-        text = "حطّ المعدّل و السكورات باش نعرفو وين نجّمو نوصلو.",
+        text = "دخّل نوتاتك و شوف معدّلك و سكورك.",
         style = MaterialTheme.typography.bodyLarge,
         color = TextGray,
         lineHeight = 24.sp
@@ -423,16 +393,19 @@ private fun GradeField(
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun FilterButton(onClick: () -> Unit) {
+private fun FilterButton(enabled: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(54.dp),
         shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = PeriwinkleButton,
-            contentColor = Color.White
+            contentColor = Color.White,
+            disabledContainerColor = DarkCard,
+            disabledContentColor = TextMuted
         )
     ) {
         Text(

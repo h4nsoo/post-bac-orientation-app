@@ -12,14 +12,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.orientation_app.ui.screens.confirmation.ConfirmationScreen
 import com.example.orientation_app.ui.screens.score.ScoreEntryScreen
 import com.example.orientation_app.ui.screens.welcome.WelcomeScreen
 import com.example.orientation_app.ui.theme.UnicompassTheme
+import com.example.orientation_app.viewmodel.ScoreViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +41,7 @@ private const val ANIM_DURATION = 450
 @Composable
 private fun UnicompassNavHost() {
     val navController = rememberNavController()
+    val scoreViewModel: ScoreViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = "welcome") {
 
@@ -89,11 +93,34 @@ private fun UnicompassNavHost() {
             val sportExempt = backStackEntry.arguments?.getBoolean("sportExempt") ?: false
 
             ScoreEntryScreen(
+                viewModel = scoreViewModel,
                 sectionId = sectionId,
                 selectedOptionalSubject = optionalSubject,
                 isSportExempt = sportExempt,
                 onBackClick = { navController.popBackStack() },
-                onFilterClick = { /* TODO: navigate to results screen */ }
+                onFilterClick = { navController.navigate("confirmation") }
+            )
+        }
+
+        composable(
+            route = "confirmation",
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(ANIM_DURATION, easing = EaseInOut)
+                ) + fadeIn(tween(ANIM_DURATION / 2))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(ANIM_DURATION, easing = EaseInOut)
+                ) + fadeOut(tween(ANIM_DURATION / 2))
+            }
+        ) {
+            ConfirmationScreen(
+                viewModel = scoreViewModel,
+                onBackClick = { navController.popBackStack() },
+                onDoneClick = { navController.popBackStack() }
             )
         }
     }
