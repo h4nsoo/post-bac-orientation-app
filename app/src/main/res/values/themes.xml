@@ -1,7 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Minimal splash/startup theme — Compose handles all runtime theming. -->
-    <style name="Theme.Orientationapp" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Orientationapp.Base" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Startup theme for pre-Android 12 devices. -->
+    <style name="Theme.Orientationapp" parent="Theme.Orientationapp.Base">
+        <item name="android:windowBackground">@drawable/splash_screen_background</item>
     </style>
 </resources>

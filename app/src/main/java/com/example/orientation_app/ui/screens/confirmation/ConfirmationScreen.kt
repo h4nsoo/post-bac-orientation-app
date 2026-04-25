@@ -43,7 +43,7 @@ import com.example.orientation_app.viewmodel.ScoreViewModel
 fun ConfirmationScreen(
     viewModel: ScoreViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onDoneClick: () -> Unit = onBackClick
+    onDoneClick: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 

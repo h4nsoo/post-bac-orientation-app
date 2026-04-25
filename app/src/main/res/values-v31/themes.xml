@@ -1,0 +1,9 @@
+<resources>
+    <!-- Android 12+ splash configuration with app logo. -->
+    <style name="Theme.Orientationapp" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0A0F1C</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.Orientationapp.Base</item>
+    </style>
+</resources>
