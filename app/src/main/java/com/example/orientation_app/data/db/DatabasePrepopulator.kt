@@ -27,18 +27,16 @@ object DatabasePrepopulator {
                 
                 val sectionString = element.optString("section", "")
                 val sectionEligibility = parseSectionEligibility(sectionString)
-                
+
                 val code = element.optString("code", "")
-                val nameAr = element.optString("nameAr", "")
-                val nameFr = element.optString("nameFr", "")
-                val universityAr = element.optString("universityAr", "")
-                val universityFr = element.optString("universityFr", "")
-                // Sometimes numbers might be parsed as int or double, optDouble safely gets it
-                val lastYearScore = element.optDouble("lastYearScore", 0.0)
+                val nameAr = element.optString("namear", "")
+                val nameFr = element.optString("namefr", "")
+                val universityAr = element.optString("universityar", "")
+                val universityFr = element.optString("universityfr", "")
+                val lastYearScore = if (element.isNull("lastyearscore")) 0.0 else element.optDouble("lastyearscore", 0.0)
                 val capacity = element.optInt("capacity", 0)
-                
-                // Keep governorateId as null per user request
-                val governorateId: Int? = null 
+
+                val governorateId: Int? = null
                 
                 filieresToInsert.add(
                     FiliereMaster(

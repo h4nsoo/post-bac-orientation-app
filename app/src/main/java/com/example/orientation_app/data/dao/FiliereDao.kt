@@ -32,6 +32,17 @@ interface FiliereDao {
     @Delete
     suspend fun delete(filiere: FiliereMaster)
 
+    // ── One-shot query for AI prompt context ───────────────────────────────
+
+    @Query("""
+        SELECT * FROM filiere_master
+        WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore <= (:userScore + 5.0)
+        ORDER BY ABS(lastYearScore - :userScore) ASC
+        LIMIT 30
+    """)
+    suspend fun filterEligibleOnce(sectionBit: Int, userScore: Double): List<FiliereMaster>
+
     // ── Core filtering query  ───────────────────────────────────────────────
     //
     //  Bitwise AND checks whether the filiere accepts the student's section.

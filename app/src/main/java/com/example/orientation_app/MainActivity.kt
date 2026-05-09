@@ -16,6 +16,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -25,10 +27,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.orientation_app.ui.screens.confirmation.ConfirmationScreen
 import com.example.orientation_app.ui.screens.next.NextPageScreen
+import com.example.orientation_app.ui.screens.results.ResultsScreen
 import com.example.orientation_app.ui.screens.score.ScoreEntryScreen
 import com.example.orientation_app.ui.screens.welcome.WelcomeScreen
 import com.example.orientation_app.ui.theme.UnicompassTheme
+import com.example.orientation_app.viewmodel.AiViewModel
 import com.example.orientation_app.viewmodel.ScoreViewModel
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,6 +77,17 @@ private fun backExitTransition(): ExitTransition =
         targetOffsetX = { it },
         animationSpec = tween(ANIM_DURATION, easing = FastOutLinearInEasing)
     ) + fadeOut(tween(ANIM_DURATION, easing = FastOutLinearInEasing))
+
+private fun sectionIdToName(sectionId: String): String = when (sectionId) {
+    "math"       -> "رياضيات"
+    "science"    -> "علوم تجريبية"
+    "tech"       -> "علوم تقنية"
+    "info"       -> "علوم اعلامية"
+    "literature" -> "آداب"
+    "economy"    -> "اقتصاد و تصرف"
+    "sports"     -> "رياضة"
+    else         -> sectionId
+}
 
 @Composable
 private fun UnicompassNavHost() {
@@ -126,9 +142,37 @@ private fun UnicompassNavHost() {
         }
 
         composable(route = "next_page") {
+            val scoreState by scoreViewModel.uiState.collectAsState()
             NextPageScreen(
                 onBackClick = { navController.popBackStack() },
-                onContinueClick = { }
+                onContinueClick = { interestText ->
+                    if (scoreState.sectionId.isBlank()) return@NextPageScreen
+                    val encodedInterest = Uri.encode(interestText)
+                    val fgScoreStr = Uri.encode(String.format(Locale.US, "%.4f", scoreState.fgScore))
+                    navController.navigate("results/${scoreState.sectionId}/$fgScoreStr/$encodedInterest")
+                }
+            )
+        }
+
+        composable(
+            route = "results/{sectionId}/{fgScore}/{interestText}",
+            arguments = listOf(
+                navArgument("sectionId")    { type = NavType.StringType },
+                navArgument("fgScore")      { type = NavType.StringType },
+                navArgument("interestText") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val sectionId    = backStackEntry.arguments?.getString("sectionId").orEmpty()
+            val fgScore      = Uri.decode(backStackEntry.arguments?.getString("fgScore").orEmpty()).toDoubleOrNull() ?: 0.0
+            val interestText = Uri.decode(backStackEntry.arguments?.getString("interestText").orEmpty())
+            val aiViewModel: AiViewModel = viewModel()
+            ResultsScreen(
+                sectionId    = sectionId,
+                sectionName  = sectionIdToName(sectionId),
+                fgScore      = fgScore,
+                interestText = interestText,
+                onBackClick  = { navController.popBackStack() },
+                viewModel    = aiViewModel
             )
         }
     }
