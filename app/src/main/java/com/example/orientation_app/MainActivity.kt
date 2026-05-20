@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
@@ -31,10 +31,11 @@ import com.example.orientation_app.ui.screens.results.ResultsScreen
 import com.example.orientation_app.ui.screens.score.ScoreEntryScreen
 import com.example.orientation_app.ui.screens.welcome.WelcomeScreen
 import com.example.orientation_app.ui.theme.UnicompassTheme
-import com.example.orientation_app.viewmodel.AiViewModel
 import com.example.orientation_app.viewmodel.ScoreViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -51,6 +52,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+// ── Animation constants ───────────────────────────────────────────────────────
 
 private const val ANIM_DURATION = 380
 
@@ -78,6 +81,8 @@ private fun backExitTransition(): ExitTransition =
         animationSpec = tween(ANIM_DURATION, easing = FastOutLinearInEasing)
     ) + fadeOut(tween(ANIM_DURATION, easing = FastOutLinearInEasing))
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 private fun sectionIdToName(sectionId: String): String = when (sectionId) {
     "math"       -> "رياضيات"
     "science"    -> "علوم تجريبية"
@@ -89,10 +94,14 @@ private fun sectionIdToName(sectionId: String): String = when (sectionId) {
     else         -> sectionId
 }
 
+// ── Navigation host ───────────────────────────────────────────────────────────
+
 @Composable
 private fun UnicompassNavHost() {
     val navController = rememberNavController()
-    val scoreViewModel: ScoreViewModel = viewModel()
+    // ScoreViewModel is hoisted at the graph level so ScoreEntry and Confirmation
+    // share the same instance and grades are not re-entered.
+    val scoreViewModel: ScoreViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -102,11 +111,15 @@ private fun UnicompassNavHost() {
         popEnterTransition = { backEnterTransition() },
         popExitTransition = { backExitTransition() }
     ) {
+
         composable(route = "welcome") {
             WelcomeScreen(
+                viewModel = hiltViewModel(),
                 onContinue = { sectionId, optionalSubject, isSportExempt ->
                     val encodedOptional = Uri.encode(optionalSubject)
-                    navController.navigate("score_entry/$sectionId?optionalSubject=$encodedOptional&sportExempt=$isSportExempt")
+                    navController.navigate(
+                        "score_entry/$sectionId?optionalSubject=$encodedOptional&sportExempt=$isSportExempt"
+                    )
                 }
             )
         }
@@ -114,28 +127,30 @@ private fun UnicompassNavHost() {
         composable(
             route = "score_entry/{sectionId}?optionalSubject={optionalSubject}&sportExempt={sportExempt}",
             arguments = listOf(
-                navArgument("sectionId") { type = NavType.StringType },
+                navArgument("sectionId")       { type = NavType.StringType },
                 navArgument("optionalSubject") { type = NavType.StringType; defaultValue = "" },
-                navArgument("sportExempt") { type = NavType.BoolType; defaultValue = false }
+                navArgument("sportExempt")     { type = NavType.BoolType;   defaultValue = false }
             )
         ) { backStackEntry ->
-            val sectionId = backStackEntry.arguments?.getString("sectionId").orEmpty()
-            val optionalSubject = Uri.decode(backStackEntry.arguments?.getString("optionalSubject").orEmpty())
-            val sportExempt = backStackEntry.arguments?.getBoolean("sportExempt") ?: false
+            val sectionId       = backStackEntry.arguments?.getString("sectionId").orEmpty()
+            val optionalSubject = Uri.decode(
+                backStackEntry.arguments?.getString("optionalSubject").orEmpty()
+            )
+            val sportExempt     = backStackEntry.arguments?.getBoolean("sportExempt") ?: false
 
             ScoreEntryScreen(
-                viewModel = scoreViewModel,
-                sectionId = sectionId,
+                viewModel              = scoreViewModel,
+                sectionId              = sectionId,
                 selectedOptionalSubject = optionalSubject,
-                isSportExempt = sportExempt,
-                onBackClick = { navController.popBackStack() },
-                onFilterClick = { navController.navigate("confirmation") }
+                isSportExempt          = sportExempt,
+                onBackClick            = { navController.popBackStack() },
+                onFilterClick          = { navController.navigate("confirmation") }
             )
         }
 
         composable(route = "confirmation") {
             ConfirmationScreen(
-                viewModel = scoreViewModel,
+                viewModel   = scoreViewModel,
                 onBackClick = { navController.popBackStack() },
                 onDoneClick = { navController.navigate("next_page") }
             )
@@ -144,12 +159,16 @@ private fun UnicompassNavHost() {
         composable(route = "next_page") {
             val scoreState by scoreViewModel.uiState.collectAsState()
             NextPageScreen(
-                onBackClick = { navController.popBackStack() },
+                onBackClick     = { navController.popBackStack() },
                 onContinueClick = { interestText ->
                     if (scoreState.sectionId.isBlank()) return@NextPageScreen
                     val encodedInterest = Uri.encode(interestText)
-                    val fgScoreStr = Uri.encode(String.format(Locale.US, "%.4f", scoreState.fgScore))
-                    navController.navigate("results/${scoreState.sectionId}/$fgScoreStr/$encodedInterest")
+                    val fgScoreStr = Uri.encode(
+                        String.format(Locale.US, "%.4f", scoreState.fgScore)
+                    )
+                    navController.navigate(
+                        "results/${scoreState.sectionId}/$fgScoreStr/$encodedInterest"
+                    )
                 }
             )
         }
@@ -163,16 +182,19 @@ private fun UnicompassNavHost() {
             )
         ) { backStackEntry ->
             val sectionId    = backStackEntry.arguments?.getString("sectionId").orEmpty()
-            val fgScore      = Uri.decode(backStackEntry.arguments?.getString("fgScore").orEmpty()).toDoubleOrNull() ?: 0.0
-            val interestText = Uri.decode(backStackEntry.arguments?.getString("interestText").orEmpty())
-            val aiViewModel: AiViewModel = viewModel()
+            val fgScore      = Uri.decode(
+                backStackEntry.arguments?.getString("fgScore").orEmpty()
+            ).toDoubleOrNull() ?: 0.0
+            val interestText = Uri.decode(
+                backStackEntry.arguments?.getString("interestText").orEmpty()
+            )
             ResultsScreen(
                 sectionId    = sectionId,
                 sectionName  = sectionIdToName(sectionId),
                 fgScore      = fgScore,
                 interestText = interestText,
                 onBackClick  = { navController.popBackStack() },
-                viewModel    = aiViewModel
+                viewModel    = hiltViewModel()
             )
         }
     }

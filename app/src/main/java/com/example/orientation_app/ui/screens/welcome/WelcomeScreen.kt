@@ -52,7 +52,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.orientation_app.R
 import com.example.orientation_app.ui.components.SectionCard
 import com.example.orientation_app.ui.theme.DarkCard
@@ -66,12 +65,19 @@ import com.example.orientation_app.viewmodel.WelcomeViewModel
 // Root screen
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** The Sports BAC section formula is not yet confirmed — navigation is blocked. */
+private const val SPORTS_SECTION_ID = "sports"
+
 @Composable
 fun WelcomeScreen(
-    viewModel: WelcomeViewModel = viewModel(),
+    viewModel: WelcomeViewModel,
     onContinue: (sectionId: String, optionalSubject: String, isSportExempt: Boolean) -> Unit = { _, _, _ -> }
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    // Sports section is selected but not yet implemented — block the CTA.
+    val isSportsSelected = state.selectedSectionId == SPORTS_SECTION_ID
+    val effectiveCanProceed = state.canProceed && !isSportsSelected
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -93,11 +99,28 @@ fun WelcomeScreen(
             SectionFilterHeader()
             Spacer(Modifier.height(14.dp))
             SectionsGrid(
-                sections = state.sections,
+                sections    = state.sections,
                 selectedIds = state.selectedSectionIds,
-                onToggle = viewModel::toggleSection
+                onToggle    = viewModel::toggleSection
             )
             Spacer(Modifier.height(14.dp))
+            // Show "coming soon" banner when sports is selected.
+            if (isSportsSelected) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape    = RoundedCornerShape(12.dp),
+                    color    = TealPrimary.copy(alpha = 0.08f),
+                    border   = BorderStroke(1.dp, TealPrimary.copy(alpha = 0.25f))
+                ) {
+                    Text(
+                        text     = "قسم الرياضة قريباً — المعادلة الرسمية في طور التحقق.",
+                        style    = MaterialTheme.typography.bodySmall,
+                        color    = TealPrimary,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+            }
             OptionalSubjectSection(
                 subjects = state.optionalSubjects,
                 selected = state.selectedOptionalSubject,
@@ -112,11 +135,11 @@ fun WelcomeScreen(
             )
             Spacer(Modifier.height(24.dp))
             ContinueButton(
-                enabled = state.canProceed,
+                enabled = effectiveCanProceed,
                 onClick = {
-                    val selectedSectionId = state.selectedSectionIds.firstOrNull() ?: return@ContinueButton
+                    val sectionId = state.selectedSectionId ?: return@ContinueButton
                     val optionalSubject = state.selectedOptionalSubject ?: return@ContinueButton
-                    onContinue(selectedSectionId, optionalSubject, state.isSportExempt)
+                    onContinue(sectionId, optionalSubject, state.isSportExempt)
                 }
             )
             Spacer(Modifier.height(20.dp))

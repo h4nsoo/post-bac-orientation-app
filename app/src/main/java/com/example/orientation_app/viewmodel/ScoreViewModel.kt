@@ -1,258 +1,106 @@
 package com.example.orientation_app.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.orientation_app.domain.scoring.SectionScoreCalculator
+import com.example.orientation_app.domain.usecase.GetSectionSubjectsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-// ── UI State ────────────────────────────────────────────────────────────────────
+// ── UI state ─────────────────────────────────────────────────────────────────
 
 /**
- * Holds every grade field on the score-entry screen.
- * Subject keys follow the design: رياضيات, فيزياء, علوم, تقنية, فرنسية, إنجليزية.
+ * Represents the grade-entry screen state.
+ *
+ * [subjectGrades] keys are always [SubjectKey][com.example.orientation_app.domain.model.SubjectKey]
+ * constants — never raw literals — so a formula lookup can never silently miss.
  */
 data class ScoreUiState(
     val sectionId: String = "",
-    val subjectGrades: Map<String, String> = defaultSubjectGrades(),
+    /** Ordered map: SubjectKey → user-typed grade string (may be empty or partial). */
+    val subjectGrades: Map<String, String> = emptyMap(),
     val fgScore: Double = 0.0,
     val computedAverage: Double = 0.0
 )
 
-private fun defaultSubjectGrades(): Map<String, String> = linkedMapOf(
-    "رياضيات" to "",
-    "فيزياء" to "",
-    "علوم" to "",
-    "تقنية" to "",
-    "فرنسية" to "",
-    "إنجليزية" to ""
-)
+// ── ViewModel ─────────────────────────────────────────────────────────────────
 
-// ── ViewModel ───────────────────────────────────────────────────────────────────
-
-class ScoreViewModel : ViewModel() {
+@HiltViewModel
+class ScoreViewModel @Inject constructor(
+    private val getSectionSubjects: GetSectionSubjectsUseCase,
+    private val calculator: SectionScoreCalculator
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ScoreUiState())
     val uiState: StateFlow<ScoreUiState> = _uiState.asStateFlow()
 
-    /** Update a single subject grade. */
-    fun updateSubjectGrade(subject: String, value: String) {
-        if (isValidGradeInput(value)) {
-            _uiState.update { state ->
-                val updatedGrades = state.subjectGrades.toMutableMap().apply {
-                    this[subject] = value
+    /**
+     * Called when the user arrives at the score-entry screen with a new
+     * [sectionId], [optionalSubject], or [isSportExempt] value.
+     *
+     * Rebuilds the subjects map using [GetSectionSubjectsUseCase] — the single
+     * canonical source of truth — and preserves any grades the user has already
+     * typed for subjects that appear in the new section too.
+     *
+     * Cross-section grade leakage is prevented: grades for subjects NOT in the
+     * new section are discarded. Within a section, changing optional subject or
+     * sport-exempt clears only the relevant entry.
+     */
+    fun configureSubjects(
+        sectionId: String,
+        optionalSubject: String,
+        isSportExempt: Boolean
+    ) {
+        _uiState.update { state ->
+            val subjects = getSectionSubjects(sectionId, optionalSubject, isSportExempt)
+            val remapped = LinkedHashMap<String, String>(subjects.size)
+            subjects.forEach { key ->
+                // Preserve an existing grade only if the key matches exactly.
+                remapped[key] = if (state.sectionId == sectionId) {
+                    state.subjectGrades[key].orEmpty()
+                } else {
+                    ""  // Fresh section — start with empty grades to prevent cross-section carryover.
                 }
-                recalculate(state.copy(subjectGrades = updatedGrades))
             }
+            recalculate(state.copy(sectionId = sectionId, subjectGrades = remapped))
         }
     }
 
-    /** Configure subject fields dynamically based on selected section rules. */
-    fun configureSubjects(sectionId: String, subjects: List<String>) {
+    /** Updates a single subject grade and immediately recalculates the score. */
+    fun updateSubjectGrade(subject: String, value: String) {
+        if (!isValidGradeInput(value)) return
         _uiState.update { state ->
-            val uniqueSubjects = subjects.distinct().filter { it.isNotBlank() }
-            val remapped = linkedMapOf<String, String>()
-            uniqueSubjects.forEach { subject ->
-                remapped[subject] = state.subjectGrades[subject].orEmpty()
-            }
-            recalculate(
-                state.copy(
-                    sectionId = sectionId,
-                    subjectGrades = remapped
-                )
-            )
+            val updated = state.subjectGrades.toMutableMap().apply { this[subject] = value }
+            recalculate(state.copy(subjectGrades = updated))
         }
     }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun recalculate(state: ScoreUiState): ScoreUiState {
-        val formula = scoreFormulaForSection(state.sectionId)
-
-        val computedMoyenne = formula.averageFromSubjects(state.subjectGrades)
-        val fg = (computedMoyenne * 4.0) + formula.specialtyComponent(state.subjectGrades)
-
-        return state.copy(
-            computedAverage = computedMoyenne,
-            fgScore = fg
-        )
+        val result = calculator.calculate(state.sectionId, state.subjectGrades)
+        return state.copy(computedAverage = result.moyenne, fgScore = result.fgScore)
     }
 
-    private fun isValidGradeInput(value: String): Boolean {
+    /**
+     * Accepts the grade string while the user is still typing.
+     * Rules:
+     *  - Empty string → allowed (cleared field)
+     *  - A lone "." → allowed (user starting to type a decimal)
+     *  - At most one decimal point
+     *  - Maximum 5 characters (e.g. "19.50")
+     *  - Parsed value must be in [0, 20]
+     */
+    internal fun isValidGradeInput(value: String): Boolean {
         if (value.isEmpty()) return true
         if (value.length > 5) return false
         if (!value.all { it.isDigit() || it == '.' }) return false
         if (value.count { it == '.' } > 1) return false
         if (value == ".") return true
-
         val parsed = value.toDoubleOrNull() ?: return false
         return parsed in 0.0..20.0
     }
-}
-
-private interface ScoreFormula {
-    fun averageFromSubjects(grades: Map<String, String>): Double
-    fun specialtyComponent(grades: Map<String, String>): Double
-}
-
-private fun scoreFormulaForSection(sectionId: String): ScoreFormula = when (sectionId) {
-    "math" -> MathFormula
-    "science" -> ScienceFormula
-    "info" -> InformaticsFormula
-    "tech" -> TechniqueFormula
-    "economy" -> EconomyFormula
-    "literature" -> LettersFormula
-    else -> MathFormula
-}
-
-private object MathFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = 4 * g(grades, "الرياضيات") +
-            4 * g(grades, "الفيزياء") +
-            g(grades, "العلوم") +
-            g(grades, "الفرنسية") +
-            g(grades, "الفلسفة") +
-            g(grades, "العربية") +
-            g(grades, "الإنجليزية") +
-            g(grades, "الإعلامية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 15.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        (2 * g(grades, "الرياضيات")) +
-            (1.5 * g(grades, "الفيزياء")) +
-            (0.5 * g(grades, "العلوم")) +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private object ScienceFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = 3 * g(grades, "الرياضيات") +
-            4 * g(grades, "الفيزياء") +
-            4 * g(grades, "العلوم") +
-            g(grades, "الفرنسية") +
-            g(grades, "الفلسفة") +
-            g(grades, "العربية") +
-            g(grades, "الإنجليزية") +
-            g(grades, "الإعلامية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 17.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        g(grades, "الرياضيات") +
-            (1.5 * g(grades, "الفيزياء")) +
-            (1.5 * g(grades, "العلوم")) +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private object InformaticsFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = 3 * g(grades, "الرياضيات") +
-            2 * g(grades, "الفيزياء") +
-            3 * g(grades, "الخوارزميات") +
-            3 * g(grades, "STI") +
-            g(grades, "الفرنسية") +
-            g(grades, "الفلسفة") +
-            g(grades, "العربية") +
-            g(grades, "الإنجليزية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 16.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        (1.5 * g(grades, "الرياضيات")) +
-            (0.5 * g(grades, "الفيزياء")) +
-            (1.5 * g(grades, "الخوارزميات")) +
-            (0.5 * g(grades, "STI")) +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private object TechniqueFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = 3 * g(grades, "الرياضيات") +
-            3 * g(grades, "الفيزياء") +
-            3 * g(grades, "الكهرباء") +
-            g(grades, "الميكانيك") +
-            g(grades, "الإعلامية") +
-            g(grades, "الفرنسية") +
-            g(grades, "الفلسفة") +
-            g(grades, "العربية") +
-            g(grades, "الإنجليزية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 16.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        (1.5 * g(grades, "الرياضيات")) +
-            g(grades, "الفيزياء") +
-            (1.5 * g(grades, "الكهرباء")) +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private object EconomyFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = 2 * g(grades, "الرياضيات") +
-            3 * g(grades, "التصرف") +
-            3 * g(grades, "الاقتصاد") +
-            2 * g(grades, "تاريخ و جغرافيا") +
-            g(grades, "الفرنسية") +
-            g(grades, "الفلسفة") +
-            g(grades, "العربية") +
-            g(grades, "الإنجليزية") +
-            g(grades, "الإعلامية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 16.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        (0.5 * g(grades, "الرياضيات")) +
-            (1.5 * g(grades, "الاقتصاد")) +
-            (1.5 * g(grades, "التصرف")) +
-            (0.5 * g(grades, "تاريخ و جغرافيا")) +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private object LettersFormula : ScoreFormula {
-    override fun averageFromSubjects(grades: Map<String, String>): Double {
-        val sum = g(grades, "التربية الإسلامية (PISL)") +
-            3 * g(grades, "تاريخ و جغرافيا") +
-            2 * g(grades, "الفرنسية") +
-            4 * g(grades, "الفلسفة") +
-            4 * g(grades, "العربية") +
-            2 * g(grades, "الإنجليزية") +
-            g(grades, "الإعلامية") +
-            sportOrNeutral(grades) +
-            optionBonus(grades)
-        return sum / 18.0
-    }
-
-    override fun specialtyComponent(grades: Map<String, String>): Double =
-        (1.5 * g(grades, "العربية")) +
-            (1.5 * g(grades, "الفلسفة")) +
-            g(grades, "تاريخ و جغرافيا") +
-            g(grades, "الإنجليزية") +
-            g(grades, "الفرنسية")
-}
-
-private fun g(grades: Map<String, String>, key: String): Double =
-    grades[key]?.toDoubleOrNull()?.coerceIn(0.0, 20.0) ?: 0.0
-
-private fun optionBonus(grades: Map<String, String>): Double {
-    val optionKey = grades.keys.firstOrNull { it.startsWith("اختياري:") } ?: return 0.0
-    val option = g(grades, optionKey)
-    return (option - 10.0).coerceAtLeast(0.0)
-}
-
-private fun sportOrNeutral(grades: Map<String, String>): Double {
-    return if ("الرياضة" in grades) g(grades, "الرياضة") else 10.0
 }

@@ -1,11 +1,26 @@
+// TODO Phase 5: rename this file to GeminiService.kt (git mv).
+//              The object was renamed; only the filename remains from the old Anthropic integration.
 package com.example.orientation_app.data.remote
 
 import com.example.orientation_app.BuildConfig
-import com.example.orientation_app.data.entity.FiliereMaster
+import com.example.orientation_app.domain.model.Recommendation
+import com.example.orientation_app.domain.model.ScoredProgram
+import com.example.orientation_app.domain.repository.IAiService
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
+import org.json.JSONArray
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object GeminiService {
+/**
+ * Production [IAiService] backed by Gemini 2.5 Flash.
+ *
+ * Parsing strategy: Gemini is prompted to return a bare JSON array. The response
+ * is cleaned of any accidental markdown fences, then parsed with [JSONArray].
+ * Each element must contain "id" (Int) and "reason" (String).
+ */
+@Singleton
+class GeminiServiceImpl @Inject constructor() : IAiService {
 
     private val model: GenerativeModel by lazy {
         GenerativeModel(
@@ -15,25 +30,30 @@ object GeminiService {
         )
     }
 
-    suspend fun getRecommendation(
+    override suspend fun getRecommendations(
         sectionName: String,
         fgScore: Double,
         interestText: String,
-        programs: List<FiliereMaster>
-    ): String {
-        val response = model.generateContent(buildUserMessage(sectionName, fgScore, interestText, programs))
-        return response.text
-            ?: throw Exception("الذكاء الاصطناعي لم يُرجع أي نتيجة. حاول مجدداً.")
+        programs: List<ScoredProgram>
+    ): List<Recommendation> {
+        val rawJson = model
+            .generateContent(buildUserMessage(sectionName, fgScore, interestText, programs))
+            .text ?: throw Exception("الذكاء الاصطناعي لم يُرجع أي نتيجة. حاول مجدداً.")
+
+        return parseResponse(rawJson, programs)
     }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
 
     private fun buildUserMessage(
         sectionName: String,
         fgScore: Double,
         interestText: String,
-        programs: List<FiliereMaster>
+        programs: List<ScoredProgram>
     ): String {
         val programsJson = programs.joinToString(",", "[", "]") { p ->
-            """{"id":${p.id},"nameAr":"${p.nameAr}","nameFr":"${p.nameFr}","score":${p.lastYearScore}}"""
+            val name = p.nameAr.substringBefore("(").trim()
+            """{"id":${p.id},"nameAr":"$name","score":${p.lastYearScore}}"""
         }
         return """
             Student:
@@ -45,7 +65,25 @@ object GeminiService {
             $programsJson
         """.trimIndent()
     }
+
+    private fun parseResponse(
+        raw: String,
+        programs: List<ScoredProgram>
+    ): List<Recommendation> {
+        val index = programs.associateBy { it.id }
+        val cleaned = raw.trim()
+            .removePrefix("```json").removePrefix("```")
+            .removeSuffix("```").trim()
+        val array = JSONArray(cleaned)
+        return (0 until array.length()).mapNotNull { i ->
+            val obj = array.getJSONObject(i)
+            val program = index[obj.getInt("id")] ?: return@mapNotNull null
+            Recommendation(program = program, reason = obj.getString("reason"))
+        }
+    }
 }
+
+// ── System prompt ─────────────────────────────────────────────────────────────
 
 private val SYSTEM_PROMPT = """
     You are a Tunisian university orientation assistant.

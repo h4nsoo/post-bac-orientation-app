@@ -3,12 +3,14 @@ package com.example.orientation_app.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.orientation_app.data.model.SectionIconType
 import com.example.orientation_app.data.model.SectionItem
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-// ── UI State ────────────────────────────────────────────────────────────────────
+// ── UI state ─────────────────────────────────────────────────────────────────
 
 data class WelcomeUiState(
     val sections: List<SectionItem> = emptyList(),
@@ -18,14 +20,31 @@ data class WelcomeUiState(
     val isDropdownExpanded: Boolean = false,
     val isSportExempt: Boolean = false
 ) {
-    /** True only when ALL required fields are filled. */
+    /** True only when the user has picked a section AND an optional subject. */
     val canProceed: Boolean
         get() = selectedSectionIds.isNotEmpty() && selectedOptionalSubject != null
+
+    /** Returns the selected section ID, or null if nothing is selected. */
+    val selectedSectionId: String?
+        get() = selectedSectionIds.firstOrNull()
 }
 
-// ── ViewModel ───────────────────────────────────────────────────────────────────
+// ── ViewModel ─────────────────────────────────────────────────────────────────
 
-class WelcomeViewModel : ViewModel() {
+/**
+ * Manages the welcome / section-selection screen state.
+ *
+ * The section list and optional subjects are currently hardcoded seeds.
+ * TODO Phase 1+: once [BacSection] is populated in the DB, replace seeds with
+ *      a SectionRepository call.
+ *
+ * NOTE: The "sports" BAC section is listed in the UI but the score formula is
+ * not yet confirmed with the Ministry. Navigation is intentionally guarded in
+ * [WelcomeScreen][com.example.orientation_app.ui.screens.welcome.WelcomeScreen]
+ * so sports-section students cannot proceed past the welcome screen.
+ */
+@HiltViewModel
+class WelcomeViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         WelcomeUiState(
@@ -35,14 +54,11 @@ class WelcomeViewModel : ViewModel() {
     )
     val uiState: StateFlow<WelcomeUiState> = _uiState.asStateFlow()
 
-    /** Toggle a section's selection on / off (single selection only). */
+    /** Toggles a section; only one section may be selected at a time. */
     fun toggleSection(sectionId: String) {
         _uiState.update { state ->
-            val updated = if (sectionId in state.selectedSectionIds) {
-                emptySet()
-            } else {
-                setOf(sectionId)
-            }
+            val updated = if (sectionId in state.selectedSectionIds) emptySet()
+                          else setOf(sectionId)
             state.copy(selectedSectionIds = updated)
         }
     }
@@ -59,27 +75,20 @@ class WelcomeViewModel : ViewModel() {
         _uiState.update { it.copy(isSportExempt = !it.isSportExempt) }
     }
 
-    // ── Seed data ───────────────────────────────────────────────────────────
+    // ── Seed data (to be replaced with DB query in a future phase) ────────────
 
     private fun defaultSections() = listOf(
-        SectionItem("math", "رياضيات", SectionIconType.MATH),
-        SectionItem("science", "علوم تجريبية", SectionIconType.SCIENCE),
-        SectionItem("tech", "علوم تقنية", SectionIconType.TECH),
-        SectionItem("info", "علوم اعلامية", SectionIconType.INFORMATICS),
-        SectionItem("literature", "آداب", SectionIconType.LITERATURE),
-        SectionItem("economy", "اقتصاد و تصرف", SectionIconType.ECONOMY),
-        SectionItem("sports", "رياضة", SectionIconType.SPORTS)
+        SectionItem("math",       "رياضيات",        SectionIconType.MATH),
+        SectionItem("science",    "علوم تجريبية",    SectionIconType.SCIENCE),
+        SectionItem("tech",       "علوم تقنية",      SectionIconType.TECH),
+        SectionItem("info",       "علوم اعلامية",    SectionIconType.INFORMATICS),
+        SectionItem("literature", "آداب",            SectionIconType.LITERATURE),
+        SectionItem("economy",    "اقتصاد و تصرف",   SectionIconType.ECONOMY),
+        SectionItem("sports",     "رياضة",           SectionIconType.SPORTS)
     )
 
     private fun defaultOptionalSubjects() = listOf(
-        "الإيطالية",
-        "الإسبانية",
-        "الألمانية",
-        "الرسم",
-        "الموسيقى",
-        "التركية",
-        "الروسية",
-        "العلوم",
-        "الرياضيات"
+        "الإيطالية", "الإسبانية", "الألمانية", "الرسم",
+        "الموسيقى", "التركية", "الروسية", "العلوم", "الرياضيات"
     )
 }

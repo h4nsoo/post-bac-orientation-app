@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.orientation_app.ui.theme.DarkCard
 import com.example.orientation_app.ui.theme.DarkCardBorder
 import com.example.orientation_app.ui.theme.InputFieldBg
@@ -57,9 +56,17 @@ import com.example.orientation_app.viewmodel.ScoreViewModel
 // Root screen
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Grade-entry screen.
+ *
+ * [sectionId], [selectedOptionalSubject], and [isSportExempt] are forwarded to
+ * [ScoreViewModel.configureSubjects] once via [LaunchedEffect].  The subject list
+ * is computed inside the ViewModel via [GetSectionSubjectsUseCase][com.example.orientation_app.domain.usecase.GetSectionSubjectsUseCase]
+ * — no subject logic lives in the UI layer.
+ */
 @Composable
 fun ScoreEntryScreen(
-    viewModel: ScoreViewModel = viewModel(),
+    viewModel: ScoreViewModel,
     sectionId: String = "",
     selectedOptionalSubject: String = "",
     isSportExempt: Boolean = false,
@@ -67,22 +74,13 @@ fun ScoreEntryScreen(
     onFilterClick: () -> Unit = {}
 ) {
     LaunchedEffect(sectionId, selectedOptionalSubject, isSportExempt) {
-        viewModel.configureSubjects(
-            sectionId = sectionId,
-            subjectsForSection(
-                sectionId = sectionId,
-                optionalSubject = selectedOptionalSubject,
-                isSportExempt = isSportExempt
-            )
-        )
+        viewModel.configureSubjects(sectionId, selectedOptionalSubject, isSportExempt)
     }
 
     val state by viewModel.uiState.collectAsState()
     val canProceed = state.subjectGrades.values.all { it.isNotBlank() }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -100,71 +98,25 @@ fun ScoreEntryScreen(
             AverageScoreCard(computedAverage = state.computedAverage)
             Spacer(Modifier.height(20.dp))
             SubjectGradesGrid(
-                grades = state.subjectGrades,
+                grades       = state.subjectGrades,
                 onGradeChange = viewModel::updateSubjectGrade
             )
             Spacer(Modifier.height(28.dp))
-            FilterButton(
-                enabled = canProceed,
-                onClick = onFilterClick
-            )
+            FilterButton(enabled = canProceed, onClick = onFilterClick)
             Spacer(Modifier.height(10.dp))
             Text(
-                text = if (canProceed) {
+                text = if (canProceed)
                     "كمّل صبّ الأعداد باش نوريوك الفاكولتات"
-                } else {
-                    "لازم تعمّر كلّ الأعداد قبل المواصلة"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = TextMuted,
+                else
+                    "لازم تعمّر كلّ الأعداد قبل المواصلة",
+                style     = MaterialTheme.typography.bodySmall,
+                color     = TextMuted,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier  = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(20.dp))
         }
     }
-}
-
-private fun subjectsForSection(
-    sectionId: String,
-    optionalSubject: String,
-    isSportExempt: Boolean
-): List<String> {
-    val baseSubjects = when (sectionId) {
-        "math", "science" -> mutableListOf(
-            "الرياضيات", "الفيزياء", "العلوم", "الإعلامية", "العربية", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-
-        "info" -> mutableListOf(
-            "الخوارزميات", "STI", "الرياضيات", "الفيزياء", "العربية", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-
-        "tech" -> mutableListOf(
-            "الكهرباء", "الميكانيك", "الرياضيات", "الفيزياء", "الإعلامية", "العربية", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-
-        "economy" -> mutableListOf(
-            "الاقتصاد", "التصرف", "الرياضيات", "الإعلامية", "العربية", "تاريخ و جغرافيا", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-
-        "literature" -> mutableListOf(
-            "التربية الإسلامية (PISL)", "تاريخ و جغرافيا", "الإعلامية", "العربية", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-
-        else -> mutableListOf(
-            "الرياضيات", "الفيزياء", "العلوم", "الإعلامية", "العربية", "الفرنسية", "الإنجليزية", "الفلسفة"
-        )
-    }
-
-    if (!isSportExempt) {
-        baseSubjects.add("الرياضة")
-    }
-
-    if (optionalSubject.isNotBlank()) {
-        baseSubjects.add("اختياري: $optionalSubject")
-    }
-
-    return baseSubjects
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -174,17 +126,16 @@ private fun subjectsForSection(
 @Composable
 private fun ScoreTopBar(onBackClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier             = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment    = Alignment.CenterVertically
     ) {
-        // Back action
         IconButton(onClick = onBackClick) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "رجوع",
-                tint = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.size(24.dp)
+                tint               = MaterialTheme.colorScheme.onBackground,
+                modifier           = Modifier.size(24.dp)
             )
         }
     }
@@ -197,15 +148,15 @@ private fun ScoreTopBar(onBackClick: () -> Unit) {
 @Composable
 private fun ScoreHeader() {
     Text(
-        text = "صبّ الأعداد متاعك",
+        text  = "صبّ الأعداد متاعك",
         style = MaterialTheme.typography.displayLarge,
         color = MaterialTheme.colorScheme.onBackground
     )
     Spacer(Modifier.height(6.dp))
     Text(
-        text = "دخّل نوتاتك و شوف معدّلك و سكورك.",
-        style = MaterialTheme.typography.bodyLarge,
-        color = TextGray,
+        text       = "دخّل نوتاتك و شوف معدّلك و سكورك.",
+        style      = MaterialTheme.typography.bodyLarge,
+        color      = TextGray,
         lineHeight = 24.sp
     )
 }
@@ -217,45 +168,32 @@ private fun ScoreHeader() {
 @Composable
 private fun FgScoreCard(score: Double) {
     Surface(
-        shape = RoundedCornerShape(18.dp),
-        color = ScoreCardBg,
-        border = BorderStroke(1.dp, DarkCardBorder),
+        shape    = RoundedCornerShape(18.dp),
+        color    = ScoreCardBg,
+        border   = BorderStroke(1.dp, DarkCardBorder),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier              = Modifier.padding(20.dp),
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left: score + delta badge
             Column {
-                Text(
-                    text = "سكور الـ FG توّا",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextGray
-                )
+                Text(text = "سكور الـ FG توّا", style = MaterialTheme.typography.bodyMedium, color = TextGray)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = String.format("%.2f", score),
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 38.sp),
+                    text       = String.format("%.2f", score),
+                    style      = MaterialTheme.typography.displayLarge.copy(fontSize = 38.sp),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color      = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            // Right: math icon
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = DarkCard,
-                border = BorderStroke(1.dp, DarkCardBorder)
-            ) {
+            Surface(shape = RoundedCornerShape(14.dp), color = DarkCard, border = BorderStroke(1.dp, DarkCardBorder)) {
                 Icon(
-                    imageVector = Icons.Outlined.Calculate,
+                    imageVector        = Icons.Outlined.Calculate,
                     contentDescription = null,
-                    tint = TextGray,
-                    modifier = Modifier
-                        .padding(14.dp)
-                        .size(28.dp)
+                    tint               = TextGray,
+                    modifier           = Modifier.padding(14.dp).size(28.dp)
                 )
             }
         }
@@ -263,49 +201,38 @@ private fun FgScoreCard(score: Double) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Dynamic average display (score-style card)
+// Average score card
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun AverageScoreCard(computedAverage: Double) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = ScoreCardBg,
-        border = BorderStroke(1.dp, DarkCardBorder)
+        shape    = RoundedCornerShape(18.dp),
+        color    = ScoreCardBg,
+        border   = BorderStroke(1.dp, DarkCardBorder)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier              = Modifier.padding(20.dp),
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(
-                    text = "المعدّل العام",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextGray
-                )
+                Text(text = "المعدّل العام", style = MaterialTheme.typography.bodyMedium, color = TextGray)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = String.format("%.2f /20", computedAverage),
-                    style = MaterialTheme.typography.displayLarge.copy(fontSize = 34.sp),
+                    text       = String.format("%.2f /20", computedAverage),
+                    style      = MaterialTheme.typography.displayLarge.copy(fontSize = 34.sp),
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color      = MaterialTheme.colorScheme.onSurface
                 )
             }
-
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = DarkCard,
-                border = BorderStroke(1.dp, DarkCardBorder)
-            ) {
+            Surface(shape = RoundedCornerShape(14.dp), color = DarkCard, border = BorderStroke(1.dp, DarkCardBorder)) {
                 Icon(
-                    imageVector = Icons.Outlined.Calculate,
+                    imageVector        = Icons.Outlined.Calculate,
                     contentDescription = null,
-                    tint = TextGray,
-                    modifier = Modifier
-                        .padding(14.dp)
-                        .size(28.dp)
+                    tint               = TextGray,
+                    modifier           = Modifier.padding(14.dp).size(28.dp)
                 )
             }
         }
@@ -313,7 +240,7 @@ private fun AverageScoreCard(computedAverage: Double) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Subject grades – 2-column grid of text fields
+// Subject grades grid
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -322,32 +249,26 @@ private fun SubjectGradesGrid(
     onGradeChange: (String, String) -> Unit
 ) {
     val entries = grades.entries.toList()
-    // Process in pairs (2 columns)
     for (i in entries.indices step 2) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             GradeField(
-                label = entries[i].key,
-                value = entries[i].value,
+                label         = entries[i].key,
+                value         = entries[i].value,
                 onValueChange = { onGradeChange(entries[i].key, it) },
-                modifier = Modifier.weight(1f)
+                modifier      = Modifier.weight(1f)
             )
             if (i + 1 < entries.size) {
                 GradeField(
-                    label = entries[i + 1].key,
-                    value = entries[i + 1].value,
+                    label         = entries[i + 1].key,
+                    value         = entries[i + 1].value,
                     onValueChange = { onGradeChange(entries[i + 1].key, it) },
-                    modifier = Modifier.weight(1f)
+                    modifier      = Modifier.weight(1f)
                 )
             } else {
                 Spacer(modifier = Modifier.weight(1f))
             }
         }
-        if (i + 2 < entries.size) {
-            Spacer(Modifier.height(14.dp))
-        }
+        if (i + 2 < entries.size) Spacer(Modifier.height(14.dp))
     }
 }
 
@@ -359,29 +280,23 @@ private fun GradeField(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        Text(text = label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(6.dp))
         OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = {
-                Text("00.00", style = MaterialTheme.typography.bodyLarge, color = TextMuted)
-            },
-            singleLine = true,
+            value          = value,
+            onValueChange  = onValueChange,
+            placeholder    = { Text("00.00", style = MaterialTheme.typography.bodyLarge, color = TextMuted) },
+            singleLine     = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
+            shape          = RoundedCornerShape(14.dp),
+            colors         = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = InputFieldBg,
-                focusedContainerColor = InputFieldBg,
-                unfocusedBorderColor = InputFieldBorder,
-                focusedBorderColor = TealPrimary,
-                cursorColor = TealPrimary,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                focusedContainerColor   = InputFieldBg,
+                unfocusedBorderColor    = InputFieldBorder,
+                focusedBorderColor      = TealPrimary,
+                cursorColor             = TealPrimary,
+                focusedTextColor        = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor      = MaterialTheme.colorScheme.onSurface
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -389,36 +304,25 @@ private fun GradeField(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Filter / CTA button
+// CTA button
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun FilterButton(enabled: Boolean, onClick: () -> Unit) {
     Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(54.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = PeriwinkleButton,
-            contentColor = Color.White,
+        onClick  = onClick,
+        enabled  = enabled,
+        modifier = Modifier.fillMaxWidth().height(54.dp),
+        shape    = RoundedCornerShape(16.dp),
+        colors   = ButtonDefaults.buttonColors(
+            containerColor         = PeriwinkleButton,
+            contentColor           = Color.White,
             disabledContainerColor = DarkCard,
-            disabledContentColor = TextMuted
+            disabledContentColor   = TextMuted
         )
     ) {
-        Text(
-            text = "صفّي الاختيارات",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
+        Text(text = "صفّي الاختيارات", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(20.dp))
     }
 }
-
