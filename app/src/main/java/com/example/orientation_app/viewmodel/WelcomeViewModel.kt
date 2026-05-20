@@ -16,13 +16,18 @@ data class WelcomeUiState(
     val sections: List<SectionItem> = emptyList(),
     val selectedSectionIds: Set<String> = emptySet(),
     val optionalSubjects: List<String> = emptyList(),
-    val selectedOptionalSubject: String? = null,
+    /**
+     * The optional subject name chosen by the student, or empty string when none
+     * is selected.  An empty string is intentionally valid — not every student
+     * sits an optional exam.
+     */
+    val selectedOptionalSubject: String = "",
     val isDropdownExpanded: Boolean = false,
     val isSportExempt: Boolean = false
 ) {
-    /** True only when the user has picked a section AND an optional subject. */
+    /** True once the user has picked a BAC section. Optional subject is not required. */
     val canProceed: Boolean
-        get() = selectedSectionIds.isNotEmpty() && selectedOptionalSubject != null
+        get() = selectedSectionIds.isNotEmpty()
 
     /** Returns the selected section ID, or null if nothing is selected. */
     val selectedSectionId: String?
@@ -63,7 +68,11 @@ class WelcomeViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun selectOptionalSubject(subject: String?) {
+    /**
+     * Selects an optional subject.  Pass an empty string to clear the selection
+     * (student has no optional subject).
+     */
+    fun selectOptionalSubject(subject: String) {
         _uiState.update { it.copy(selectedOptionalSubject = subject, isDropdownExpanded = false) }
     }
 

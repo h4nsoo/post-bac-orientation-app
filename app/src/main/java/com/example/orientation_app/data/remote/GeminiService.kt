@@ -1,5 +1,3 @@
-// TODO Phase 5: rename this file to GeminiService.kt (git mv).
-//              The object was renamed; only the filename remains from the old Anthropic integration.
 package com.example.orientation_app.data.remote
 
 import com.example.orientation_app.BuildConfig

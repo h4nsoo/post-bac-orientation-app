@@ -63,16 +63,12 @@ abstract class UniCompassDatabase : RoomDatabase() {
     companion object {
 
         /**
-         * Creates a Room-backed instance of the database.
-         * Called once by [com.example.orientation_app.data.di.DatabaseModule]; the
-         * result is kept as a Hilt singleton.
+         * Builds the database and wires the one-time prepopulation callback.
          *
-         * Pre-release policy: [fallbackToDestructiveMigration] is intentional while
-         * the schema is at version 1 and all data is re-seeded from assets.
-         * TODO: Replace with explicit Migration objects before first Play Store release.
-         */
-        /**
-         * Build the database and wire the one-time prepopulation callback.
+         * Pre-release policy: destructive migration is intentional while the schema
+         * is at version 1 and all data is re-seeded from assets on every fresh install.
+         * TODO: Replace with explicit [androidx.room.migration.Migration] objects
+         *       before the first Play Store release.
          *
          * Uses a [lateinit] local so the callback can reference the built instance
          * without a recursive [create] call.  Room only fires [RoomDatabase.Callback.onCreate]
@@ -85,7 +81,7 @@ abstract class UniCompassDatabase : RoomDatabase() {
                 UniCompassDatabase::class.java,
                 "unicompass_db"
             )
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(dropAllTables = true)
                 .addCallback(object : RoomDatabase.Callback() {
                     override fun onCreate(sq: SupportSQLiteDatabase) {
                         super.onCreate(sq)

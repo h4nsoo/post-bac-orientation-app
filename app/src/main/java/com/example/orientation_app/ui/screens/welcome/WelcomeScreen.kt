@@ -122,11 +122,11 @@ fun WelcomeScreen(
                 Spacer(Modifier.height(14.dp))
             }
             OptionalSubjectSection(
-                subjects = state.optionalSubjects,
-                selected = state.selectedOptionalSubject,
-                expanded = state.isDropdownExpanded,
-                onToggle = viewModel::toggleDropdown,
-                onSelect = viewModel::selectOptionalSubject
+                subjects  = state.optionalSubjects,
+                selected  = state.selectedOptionalSubject,
+                expanded  = state.isDropdownExpanded,
+                onToggle  = viewModel::toggleDropdown,
+                onSelect  = viewModel::selectOptionalSubject
             )
             Spacer(Modifier.height(28.dp))
             BacSportSection(
@@ -138,8 +138,7 @@ fun WelcomeScreen(
                 enabled = effectiveCanProceed,
                 onClick = {
                     val sectionId = state.selectedSectionId ?: return@ContinueButton
-                    val optionalSubject = state.selectedOptionalSubject ?: return@ContinueButton
-                    onContinue(sectionId, optionalSubject, state.isSportExempt)
+                    onContinue(sectionId, state.selectedOptionalSubject, state.isSportExempt)
                 }
             )
             Spacer(Modifier.height(20.dp))
@@ -320,16 +319,19 @@ private fun SectionsGrid(
 // Optional subject dropdown
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Sentinel displayed when no optional subject has been chosen. */
+private const val NO_OPTIONAL_SUBJECT = "بدون مادة اختيارية"
+
 @Composable
 private fun OptionalSubjectSection(
     subjects: List<String>,
-    selected: String?,
+    selected: String,       // empty string = no subject chosen
     expanded: Boolean,
     onToggle: () -> Unit,
-    onSelect: (String?) -> Unit
+    onSelect: (String) -> Unit
 ) {
     Text(
-        text = "مادة اختيارية",
+        text = "مادة اختيارية (اختياري)",
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onBackground
     )
@@ -350,9 +352,10 @@ private fun OptionalSubjectSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = selected ?: "اختار مادة اختيارية...",
+                    text = selected.ifBlank { "اختار مادة اختيارية..." },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (selected != null) MaterialTheme.colorScheme.onSurface else TextMuted
+                    color = if (selected.isNotBlank()) MaterialTheme.colorScheme.onSurface
+                            else TextMuted
                 )
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
@@ -368,6 +371,17 @@ private fun OptionalSubjectSection(
             onDismissRequest = onToggle,
             modifier = Modifier.background(DarkCard)
         ) {
+            // "None" entry — lets the student clear a previously made selection.
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        text = NO_OPTIONAL_SUBJECT,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextGray
+                    )
+                },
+                onClick = { onSelect("") }
+            )
             subjects.forEach { subject ->
                 DropdownMenuItem(
                     text = {

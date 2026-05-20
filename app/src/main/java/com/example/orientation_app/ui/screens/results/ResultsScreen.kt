@@ -20,7 +20,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -230,7 +230,7 @@ private fun RecommendationCard(rec: Recommendation) {
                 }
             }
             Spacer(Modifier.height(10.dp))
-            Divider(color = DarkCardBorder)
+            HorizontalDivider(color = DarkCardBorder)
             Spacer(Modifier.height(10.dp))
             Text(
                 text       = rec.reason,

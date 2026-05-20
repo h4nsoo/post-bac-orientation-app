@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.orientation_app.ui.theme.DarkCard
 import com.example.orientation_app.ui.theme.DarkCardBorder
 import com.example.orientation_app.ui.theme.PeriwinkleButton
@@ -41,7 +40,7 @@ import com.example.orientation_app.viewmodel.ScoreViewModel
 
 @Composable
 fun ConfirmationScreen(
-    viewModel: ScoreViewModel = viewModel(),
+    viewModel: ScoreViewModel,
     onBackClick: () -> Unit = {},
     onDoneClick: () -> Unit = {}
 ) {

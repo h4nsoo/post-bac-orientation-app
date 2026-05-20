@@ -55,7 +55,15 @@ fun NextPageScreen(
     onContinueClick: (String) -> Unit = {}
 ) {
     var interestText by remember { mutableStateOf("") }
-    val quickSuggestions = listOf("سيبيرسيكورتي", "روبوتيك", "ديزاين", "بيزنس")
+    val canContinue = interestText.isNotBlank()
+    val quickSuggestions = listOf(
+        "أحب الرياضيات و الفيزياء",
+        "مهتم بالذكاء الاصطناعي",
+        "أحب الطب و علوم الصحة",
+        "الاقتصاد و ريادة الأعمال",
+        "الهندسة و الروبوتيك",
+        "الأدب و الترجمة"
+    )
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -144,15 +152,27 @@ fun NextPageScreen(
                     Spacer(Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        if (!canContinue) {
+                            Text(
+                                text = "اكتب شيء باش تواصل",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextMuted
+                            )
+                        } else {
+                            Spacer(Modifier.weight(1f))
+                        }
                         Button(
                             onClick = { onContinueClick(interestText.trim()) },
+                            enabled = canContinue,
                             shape = RoundedCornerShape(999.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = PeriwinkleButton,
-                                contentColor = Color.White
+                                contentColor = Color.White,
+                                disabledContainerColor = DarkCard,
+                                disabledContentColor = TextMuted
                             )
                         ) {
                             Text(
