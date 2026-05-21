@@ -141,17 +141,33 @@ class AiViewModelTest {
         assertThat(viewModel.uiState.value).isInstanceOf(AiUiState.Success::class.java)
     }
 
-    @Test fun `getRecommendation - is a no-op when already in Success`() = runTest {
+    @Test fun `getRecommendation - is a no-op when already in Success with same params`() = runTest {
         coEvery { useCase(any(), any(), any(), any()) } returns sampleRecs
 
-        viewModel.getRecommendation("math", "رياضيات", 180.0, "")
+        viewModel.getRecommendation("math", "رياضيات", 180.0, "أحب الرياضيات")
         testDispatcher.scheduler.advanceUntilIdle()
         assertThat(viewModel.uiState.value).isInstanceOf(AiUiState.Success::class.java)
 
-        viewModel.getRecommendation("math", "رياضيات", 180.0, "")
+        // Exact same inputs → cached, no second API call.
+        viewModel.getRecommendation("math", "رياضيات", 180.0, "أحب الرياضيات")
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { useCase(any(), any(), any(), any()) }
+    }
+
+    @Test fun `getRecommendation - re-fetches when interestText changes after Success`() = runTest {
+        coEvery { useCase(any(), any(), any(), any()) } returns sampleRecs
+
+        viewModel.getRecommendation("math", "رياضيات", 180.0, "أحب الرياضيات")
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertThat(viewModel.uiState.value).isInstanceOf(AiUiState.Success::class.java)
+
+        // User went back and changed their interests — must trigger a new fetch.
+        viewModel.getRecommendation("math", "رياضيات", 180.0, "أحب الطب و الصحة")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 2) { useCase(any(), any(), any(), any()) }
+        assertThat(viewModel.uiState.value).isInstanceOf(AiUiState.Success::class.java)
     }
 
     // ── retry ─────────────────────────────────────────────────────────────────
