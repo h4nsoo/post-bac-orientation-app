@@ -20,6 +20,8 @@ import javax.inject.Inject
  */
 data class ScoreUiState(
     val sectionId: String = "",
+    /** Arabic display name for the selected section, e.g. "رياضيات". */
+    val sectionDisplayName: String = "",
     /** Ordered map: SubjectKey → user-typed grade string (may be empty or partial). */
     val subjectGrades: Map<String, String> = emptyMap(),
     val fgScore: Double = 0.0,
@@ -65,7 +67,11 @@ class ScoreViewModel @Inject constructor(
                     ""  // Fresh section — start with empty grades to prevent cross-section carryover.
                 }
             }
-            recalculate(state.copy(sectionId = sectionId, subjectGrades = remapped))
+            recalculate(state.copy(
+                sectionId          = sectionId,
+                sectionDisplayName = GetSectionSubjectsUseCase.displayName(sectionId),
+                subjectGrades      = remapped
+            ))
         }
     }
 

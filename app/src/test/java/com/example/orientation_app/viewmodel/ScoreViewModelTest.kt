@@ -115,6 +115,31 @@ class ScoreViewModelTest {
         assertThat(viewModel.uiState.value.sectionId).isEqualTo("economy")
     }
 
+    @Test fun `configureSubjects - sectionDisplayName is populated for known sections`() {
+        viewModel.configureSubjects("math",       "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("رياضيات")
+
+        viewModel.configureSubjects("science",    "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("علوم تجريبية")
+
+        viewModel.configureSubjects("info",       "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("علوم إعلامية")
+
+        viewModel.configureSubjects("tech",       "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("علوم تقنية")
+
+        viewModel.configureSubjects("economy",    "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("اقتصاد و تصرف")
+
+        viewModel.configureSubjects("literature", "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("آداب")
+    }
+
+    @Test fun `configureSubjects - unknown sectionId falls back to raw id`() {
+        viewModel.configureSubjects("unknown_section", "", isSportExempt = false)
+        assertThat(viewModel.uiState.value.sectionDisplayName).isEqualTo("unknown_section")
+    }
+
     @Test fun `configureSubjects - initial grades are all empty strings`() {
         viewModel.configureSubjects("science", "", isSportExempt = false)
         viewModel.uiState.value.subjectGrades.values.forEach { grade ->

@@ -73,6 +73,14 @@ fun ConfirmationScreen(
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
+            if (state.sectionDisplayName.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text  = state.sectionDisplayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TealPrimary
+                )
+            }
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "راجع أعدادك و سكورك قبل المواصلة.",

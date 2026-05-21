@@ -74,12 +74,29 @@ class GetSectionSubjectsUseCase @Inject constructor() {
     // ── Section ID constants (keep in sync with WelcomeViewModel seed data) ──
 
     companion object {
-        const val MATH      = "math"
-        const val SCIENCE   = "science"
-        const val INFO      = "info"
-        const val TECH      = "tech"
-        const val ECONOMY   = "economy"
+        const val MATH       = "math"
+        const val SCIENCE    = "science"
+        const val INFO       = "info"
+        const val TECH       = "tech"
+        const val ECONOMY    = "economy"
         const val LITERATURE = "literature"
-        const val SPORTS    = "sports"
+        const val SPORTS     = "sports"
+
+        /**
+         * Returns the Arabic display name for a given section ID.
+         * Used by [ScoreViewModel] to populate [ScoreUiState.sectionDisplayName]
+         * so screens downstream from grade entry can show a human-readable label
+         * without re-wiring a separate display-name parameter through navigation.
+         */
+        fun displayName(sectionId: String): String = when (sectionId) {
+            MATH       -> "رياضيات"
+            SCIENCE    -> "علوم تجريبية"
+            INFO       -> "علوم إعلامية"
+            TECH       -> "علوم تقنية"
+            ECONOMY    -> "اقتصاد و تصرف"
+            LITERATURE -> "آداب"
+            SPORTS     -> "رياضة"
+            else       -> sectionId
+        }
     }
 }
