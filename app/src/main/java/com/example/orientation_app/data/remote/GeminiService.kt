@@ -39,10 +39,14 @@ class GeminiServiceImpl @Inject constructor() : IAiService {
         interestText: String,
         programs: List<ScoredProgram>
     ): List<Recommendation> {
+        val userMsg = buildUserMessage(sectionName, fgScore, interestText, programs)
+        println("GeminiService ▶ Sending to Gemini:\n$userMsg")
+
         val rawJson = model
-            .generateContent(buildUserMessage(sectionName, fgScore, interestText, programs))
+            .generateContent(userMsg)
             .text ?: throw Exception("الذكاء الاصطناعي لم يُرجع أي نتيجة. حاول مجدداً.")
 
+        println("GeminiService ▶ Raw Gemini response:\n$rawJson")
         return parseResponse(rawJson, programs)
     }
 
@@ -67,6 +71,9 @@ class GeminiServiceImpl @Inject constructor() : IAiService {
             appendLine("  FG score    : ${String.format("%.2f", fgScore)}")
             appendLine("  Interests (student's own words) :")
             appendLine("    \"$interestText\"")
+            appendLine()
+            appendLine("Important: the programme list below is already deduplicated and ranked by local relevance.")
+            appendLine("Choose only from this shortlist. Do not invent or switch to unrelated programmes.")
             appendLine()
             appendLine("Eligible programmes (already filtered for section + score) :")
             append(programsJson)

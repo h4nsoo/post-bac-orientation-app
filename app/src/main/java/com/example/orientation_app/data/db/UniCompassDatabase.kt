@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.orientation_app.data.dao.*
 import com.example.orientation_app.data.entity.*
+import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
         AppMetadata::class,
         OrientationEvent::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -83,8 +84,31 @@ abstract class UniCompassDatabase : RoomDatabase() {
             )
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .addCallback(object : RoomDatabase.Callback() {
+                    // Called on fresh install — seed from assets.
                     override fun onCreate(sq: SupportSQLiteDatabase) {
                         super.onCreate(sq)
+                        seed()
+                    }
+                    // onDestructiveMigration is NOT guaranteed to fire on all AGP /
+                    // Room alpha combinations, so we also guard here: if the
+                    // filiere_master table is empty (schema was just wiped by a
+                    // destructive migration) we re-seed immediately.
+                    override fun onOpen(sq: SupportSQLiteDatabase) {
+                        super.onOpen(sq)
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val cursor = sq.query(
+                                SimpleSQLiteQuery("SELECT COUNT(*) FROM filiere_master")
+                            )
+                            var isEmpty = true
+                            try {
+                                if (cursor.moveToFirst()) isEmpty = cursor.getInt(0) == 0
+                            } finally {
+                                cursor.close()
+                            }
+                            if (isEmpty) seed()
+                        }
+                    }
+                    private fun seed() {
                         CoroutineScope(Dispatchers.IO).launch {
                             DatabasePrepopulator.prepopulate(context.applicationContext, db)
                         }

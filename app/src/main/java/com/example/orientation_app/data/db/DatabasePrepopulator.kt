@@ -88,6 +88,10 @@ object DatabasePrepopulator {
                     nameFr        = obj.optString("namefr", ""),
                     universityAr  = obj.optString("universityar", ""),
                     universityFr  = obj.optString("universityfr", ""),
+                    // 0.0 is a sentinel for "no published cut-off score" (JSON null).
+                    // All DAO eligibility queries filter `lastYearScore > 0` to
+                    // exclude these rows from score-based filtering, preventing
+                    // programmes with unknown scores from flooding AI results.
                     lastYearScore = if (obj.isNull("lastyearscore")) 0.0
                                    else obj.optDouble("lastyearscore", 0.0),
                     capacity         = obj.optInt("capacity", 0),

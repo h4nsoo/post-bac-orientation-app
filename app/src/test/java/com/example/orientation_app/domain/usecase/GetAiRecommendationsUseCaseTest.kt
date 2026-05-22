@@ -9,6 +9,7 @@ import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -50,6 +51,55 @@ class GetAiRecommendationsUseCaseTest {
         val result = useCase("math", "رياضيات", 180.0, "أحب الرياضيات")
 
         assertThat(result).isEqualTo(sampleRecs)
+    }
+
+    @Test fun `deduplicates codes and ranks technical programmes ahead of literature for AI interests`() = runTest {
+        val literatureProgram = ScoredProgram(
+            id = 2, code = "LIT-01", nameAr = "أدب اللغة والحضارة", nameFr = "Langue littérature et civilisation",
+            universityAr = "جامعة", universityFr = "Université",
+            lastYearScore = 140.0, capacity = 80, sectionEligibility = 8
+        )
+        val aiProgram = ScoredProgram(
+            id = 3, code = "CS-01", nameAr = "الإعلامية والذكاء الاصطناعي", nameFr = "Informatique et intelligence artificielle",
+            universityAr = "جامعة", universityFr = "Université",
+            lastYearScore = 155.0, capacity = 60, sectionEligibility = 8
+        )
+        val duplicateAiProgram = ScoredProgram(
+            id = 4, code = "CS-01", nameAr = "الإعلامية", nameFr = "Informatique",
+            universityAr = "جامعة", universityFr = "Université",
+            lastYearScore = 152.0, capacity = 55, sectionEligibility = 8
+        )
+        val otherTechProgram = ScoredProgram(
+            id = 5, code = "CS-02", nameAr = "علوم الحاسوب", nameFr = "Informatique",
+            universityAr = "جامعة", universityFr = "Université",
+            lastYearScore = 150.0, capacity = 70, sectionEligibility = 8
+        )
+
+        val shortlisted = slot<List<ScoredProgram>>()
+        coEvery { filiereRepository.getEligibleOnce(any(), any()) } returns listOf(
+            literatureProgram,
+            aiProgram,
+            duplicateAiProgram,
+            otherTechProgram
+        )
+        coEvery { aiService.getRecommendations(any(), any(), any(), capture(shortlisted)) } returns sampleRecs
+
+        useCase("info", "علوم إعلامية", 160.0, "مهتم بالذكاء الاصطناعي")
+
+        val codes = shortlisted.captured.map { it.code }
+        // Duplicate (CS-01 appears twice) must be collapsed to one entry.
+        assertThat(codes.count { it == "CS-01" }).isEqualTo(1)
+        // Both tech programmes must be present and appear before the literature one.
+        assertThat(codes).contains("CS-01")
+        assertThat(codes).contains("CS-02")
+        assertThat(codes).contains("LIT-01")
+        val cs01Pos = codes.indexOf("CS-01")
+        val cs02Pos = codes.indexOf("CS-02")
+        val litPos  = codes.indexOf("LIT-01")
+        assertThat(cs01Pos).isLessThan(litPos)
+        assertThat(cs02Pos).isLessThan(litPos)
+        // The programme with an explicit AI keyword in its name ranks first.
+        assertThat(codes.first()).isEqualTo("CS-01")
     }
 
     @Test fun `persists interest text before querying programs`() = runTest {

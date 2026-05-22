@@ -33,10 +33,19 @@ interface FiliereDao {
     suspend fun delete(filiere: FiliereMaster)
 
     // ── One-shot query for AI prompt context ───────────────────────────────
+    //
+    //  NOTE: `lastYearScore > 0` is intentional.  Programs whose cut-off score
+    //  was absent in the source JSON are stored with lastYearScore = 0.0 (a
+    //  sentinel; the minimum real score in the dataset is ≈ 65.8).  Including
+    //  those programmes would flood the AI context with "Langue littérature et
+    //  civilisation" entries that happen to be the first 30 rows in insertion
+    //  order — causing the model to recommend the same field regardless of
+    //  student interests or actual score.
 
     @Query("""
         SELECT * FROM filiere_master
         WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore > 0
           AND lastYearScore <= (:userScore + 5.0)
         ORDER BY ABS(lastYearScore - :userScore) ASC
         LIMIT 30
@@ -48,18 +57,21 @@ interface FiliereDao {
     //  Bitwise AND checks whether the filiere accepts the student's section.
     //  The +5 safety margin lets students see filieres slightly above their
     //  calculated score — useful for borderline candidates.
-    //
+    //  `lastYearScore > 0` excludes programmes with no published cut-off score
+    //  (stored as 0.0 sentinel) so they don't distort the ordered results.
 
     /**
      * Returns filieres that:
      * 1. Accept the student's bac section  (bitwise: `sectionEligibility & sectionBit ≠ 0`)
-     * 2. Had a cut-off score the student can realistically reach (`lastYearScore ≤ userScore + 5`)
+     * 2. Have a published cut-off score (`lastYearScore > 0`)
+     * 3. Had a cut-off score the student can realistically reach (`lastYearScore ≤ userScore + 5`)
      *
      * Results are ordered by proximity to the student's score (closest first).
      */
     @Query("""
         SELECT * FROM filiere_master
         WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore > 0
           AND lastYearScore <= (:userScore + 5.0)
         ORDER BY ABS(lastYearScore - :userScore) ASC
     """)
@@ -74,6 +86,7 @@ interface FiliereDao {
     @Query("""
         SELECT * FROM filiere_master
         WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore > 0
           AND lastYearScore <= (:userScore + 5.0)
           AND governorateId = :governorateId
         ORDER BY lastYearScore DESC
@@ -110,6 +123,7 @@ interface FiliereDao {
     @Query("""
         SELECT * FROM filiere_master
         WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore > 0
           AND lastYearScore <= (:userScore + 5.0)
         ORDER BY ABS(lastYearScore - :userScore) ASC
     """)
@@ -123,6 +137,7 @@ interface FiliereDao {
     @Query("""
         SELECT COUNT(*) FROM filiere_master
         WHERE (sectionEligibility & :sectionBit) != 0
+          AND lastYearScore > 0
           AND lastYearScore <= (:userScore + 5.0)
     """)
     suspend fun countEligible(sectionBit: Int, userScore: Double): Int

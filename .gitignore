@@ -14,3 +14,11 @@ local.properties
 *.log
 build.log
 programs_by_section.json
+/docs/
+# LaTeX build artifacts
+*.aux
+*.lof
+*.lol
+*.lot
+*.out
+*.toc
