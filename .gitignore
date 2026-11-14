@@ -22,3 +22,11 @@ programs_by_section.json
 *.lot
 *.out
 *.toc
+
+# Terraform state & secrets
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+infra/.bootstrap/
