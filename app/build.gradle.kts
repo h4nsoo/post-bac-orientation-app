@@ -32,6 +32,12 @@ android {
             "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\""
         )
 
+        buildConfigField(
+            "String",
+            "CLOUD_API_URL",
+            "\"${localProperties.getProperty("CLOUD_API_URL", "https://7ifdxscjt7.execute-api.eu-central-1.amazonaws.com")}\""
+        )
+
         // Room configuration
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")

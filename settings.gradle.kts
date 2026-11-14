@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "orientation-app"
 include(":app")
+include(":cloud-lambda")

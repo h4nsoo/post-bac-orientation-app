@@ -7,24 +7,25 @@ import com.example.orientation_app.domain.repository.IAiService
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
 import com.google.ai.client.generativeai.type.generationConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Production [IAiService] backed by Gemini 2.5 Flash.
- *
- * Parsing strategy: Gemini is prompted to return a bare JSON array. The response
- * is cleaned of any accidental markdown fences, then parsed with [JSONArray].
- * Each element must contain "id" (Int) and "reason" (String).
- *
- * Temperature is set to 1.0 so the model does not always converge to the same
- * highest-score programmes — diversity of output is desirable here.
+ * Production [IAiService] backed by the AWS Serverless Cloud Layer
+ * (API Gateway HTTP v2 -> Kotlin AWS Lambda -> DynamoDB Prompt Cache + SSM + Gemini 2.5 Flash),
+ * with automatic fallback to on-device Gemini SDK if the cloud stack is offline/destroyed.
  */
 @Singleton
 class GeminiServiceImpl @Inject constructor() : IAiService {
 
-    private val model: GenerativeModel by lazy {
+    private val fallbackModel: GenerativeModel by lazy {
         GenerativeModel(
             modelName         = "gemini-2.5-flash",
             apiKey            = BuildConfig.GEMINI_API_KEY,
@@ -39,15 +40,100 @@ class GeminiServiceImpl @Inject constructor() : IAiService {
         interestText: String,
         programs: List<ScoredProgram>
     ): List<Recommendation> {
-        val userMsg = buildUserMessage(sectionName, fgScore, interestText, programs)
-        println("GeminiService ▶ Sending to Gemini:\n$userMsg")
+        val cloudUrl = BuildConfig.CLOUD_API_URL.trim().trimEnd('/')
+        if (cloudUrl.isNotEmpty()) {
+            runCatching {
+                return fetchFromAwsCloud(cloudUrl, sectionName, fgScore, interestText, programs)
+            }.onFailure { error ->
+                println("GeminiService ▶ AWS Cloud BFF unreachable (${error.message}), falling back to direct Gemini SDK.")
+            }
+        }
 
-        val rawJson = model
+        val userMsg = buildUserMessage(sectionName, fgScore, interestText, programs)
+        println("GeminiService ▶ Sending to Gemini (Direct Fallback):\n$userMsg")
+
+        val rawJson = fallbackModel
             .generateContent(userMsg)
             .text ?: throw Exception("الذكاء الاصطناعي لم يُرجع أي نتيجة. حاول مجدداً.")
 
         println("GeminiService ▶ Raw Gemini response:\n$rawJson")
         return parseResponse(rawJson, programs)
+    }
+
+    // ── AWS Cloud BFF Call ────────────────────────────────────────────────────
+
+    private suspend fun fetchFromAwsCloud(
+        baseUrl: String,
+        sectionName: String,
+        fgScore: Double,
+        interestText: String,
+        programs: List<ScoredProgram>
+    ): List<Recommendation> = withContext(Dispatchers.IO) {
+        val endpoint = "$baseUrl/v1/recommendations"
+        val programsArray = JSONArray().apply {
+            programs.forEach { p ->
+                put(
+                    JSONObject()
+                        .put("id", p.id)
+                        .put("code", p.code)
+                        .put("nameAr", p.nameAr.substringBefore("(").trim())
+                        .put("nameFr", p.nameFr.substringBefore("(").trim())
+                        .put("minScore", p.lastYearScore)
+                )
+            }
+        }
+
+        val requestPayload = JSONObject()
+            .put("sectionName", sectionName)
+            .put("fgScore", fgScore)
+            .put("interestText", interestText)
+            .put("programs", programsArray)
+            .toString()
+
+        println("GeminiService ▶ Calling AWS Cloud BFF: POST $endpoint")
+
+        val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+            requestMethod = "POST"
+            connectTimeout = 15_000
+            readTimeout = 20_000
+            doOutput = true
+            setRequestProperty("Content-Type", "application/json; charset=utf-8")
+        }
+
+        try {
+            connection.outputStream.use { os ->
+                os.write(requestPayload.toByteArray(StandardCharsets.UTF_8))
+            }
+
+            val status = connection.responseCode
+            val responseBody = (if (status in 200..299) connection.inputStream else connection.errorStream)
+                ?.bufferedReader(StandardCharsets.UTF_8)
+                ?.use { it.readText() }
+                .orEmpty()
+
+            if (status !in 200..299) {
+                throw IllegalStateException("AWS Cloud API returned HTTP $status: $responseBody")
+            }
+
+            val responseJson = JSONObject(responseBody)
+            val cacheHit = responseJson.optBoolean("cacheHit", false)
+            val recommendationsArray = responseJson.getJSONArray("recommendations")
+            println("GeminiService ▶ AWS Cloud BFF responded (cacheHit=$cacheHit, count=${recommendationsArray.length()})")
+
+            val index = programs.associateBy { it.id }
+            (0 until recommendationsArray.length()).mapNotNull { i ->
+                val obj = recommendationsArray.getJSONObject(i)
+                val program = index[obj.getInt("id")] ?: return@mapNotNull null
+                Recommendation(
+                    program = program,
+                    reason = obj.getString("reason")
+                )
+            }.ifEmpty {
+                throw IllegalStateException("AWS Cloud API returned 0 matching recommendations")
+            }
+        } finally {
+            connection.disconnect()
+        }
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -58,8 +144,6 @@ class GeminiServiceImpl @Inject constructor() : IAiService {
         interestText: String,
         programs: List<ScoredProgram>
     ): String {
-        // Include both Arabic and French names so the model can recognise
-        // domain keywords in either language (e.g. "Médecine", "Informatique").
         val programsJson = programs.joinToString(",\n", "[\n", "\n]") { p ->
             val nameAr = p.nameAr.substringBefore("(").trim()
             val nameFr = p.nameFr.substringBefore("(").trim()
