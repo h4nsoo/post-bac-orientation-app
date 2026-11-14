@@ -1,11 +1,22 @@
-package com.example.orientation_app.domain.scoring
+package com.example.orientation_app.unit.scoring
 
 import com.example.orientation_app.domain.model.SubjectKey
+import com.example.orientation_app.domain.scoring.EconomyFormula
+import com.example.orientation_app.domain.scoring.InformaticsFormula
+import com.example.orientation_app.domain.scoring.LettersFormula
+import com.example.orientation_app.domain.scoring.MathFormula
+import com.example.orientation_app.domain.scoring.ScienceFormula
+import com.example.orientation_app.domain.scoring.SectionScoreCalculator
+import com.example.orientation_app.domain.scoring.TechniqueFormula
+import com.example.orientation_app.domain.scoring.scoreFormulaFor
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 /**
- * Verifies each section's score formula against known exact values.
+ * Unit tests — score formula arithmetic.
+ *
+ * Each formula object ([MathFormula], [ScienceFormula], …) is tested in
+ * complete isolation: no mocks, no coroutines, no Android APIs.
  *
  * Formula recap:
  *   moyenne  = weightedSum / denominator
@@ -145,15 +156,13 @@ class ScoreFormulaTest {
         // sum = (3+3+3+1+1+1+1+1+1)×20 + 1×20 = 320; denom = 16 → 20
         assertClose(TechniqueFormula.averageFromSubjects(g), 20.0)
         // specialty = (1.5+1+1.5+0.5+1+1)×20 = 6.5×20 = 130
-        // FIXME: Mechanics coefficient (0.5) is pending Ministry confirmation.
-        //        Update the coefficient in TechniqueFormula and adjust this expected value when confirmed.
         assertClose(TechniqueFormula.specialtyComponent(g), 130.0)
     }
 
     @Test fun `TechniqueFormula - mechanics contributes to specialty`() {
         // Only mechanics has a grade; everything else is 0 (sport exempt to eliminate neutral 10).
         val g = grades(SubjectKey.MECHANICS to "10")
-        // specialty = 0.5 × 10 = 5  (FIXME: update when Ministry coefficient confirmed)
+        // specialty = 0.5 × 10 = 5
         assertClose(TechniqueFormula.specialtyComponent(g), 5.0)
     }
 

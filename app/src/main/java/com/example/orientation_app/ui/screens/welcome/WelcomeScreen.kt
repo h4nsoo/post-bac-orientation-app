@@ -201,7 +201,7 @@ private fun WelcomeHeader() {
     )
     Spacer(Modifier.height(10.dp))
     Text(
-        text = "صفّي الاختيارات متاعك و ابدأ رسمات المستقبل.\nاختار السيكسيون متاعك و خلّينا نعاونوك.",
+        text = "صفّي الاختيارات متاعك و ابدأ.\nاختار السيكسيون متاعك و خلّينا نعاونوك.",
         style = MaterialTheme.typography.bodyLarge,
         color = TextGray,
         lineHeight = 24.sp
@@ -242,14 +242,14 @@ private fun TipCard() {
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = "توصية ملقاوحاش:",
+                        text = "توصية:",
                         style = MaterialTheme.typography.labelLarge,
                         color = accentColor
                     )
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "بناءً على البروفيل متاعك، نتصحّوك تركّز على السيكسيونات اللي فيها آفاق تقنية قوية.",
+                    text = "بناءً على البروفيل متاعك و اهتمامتك، نختارولك اكثر الجامعات الي تناسبك اما الخيار النهائي يبقى ليك انت.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextGray,
                     lineHeight = 20.sp

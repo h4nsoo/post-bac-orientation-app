@@ -1,10 +1,11 @@
-package com.example.orientation_app.domain.usecase
+package com.example.orientation_app.module.usecase
 
 import com.example.orientation_app.domain.model.Recommendation
 import com.example.orientation_app.domain.model.ScoredProgram
 import com.example.orientation_app.domain.repository.FiliereRepository
 import com.example.orientation_app.domain.repository.IAiService
 import com.example.orientation_app.domain.repository.UserRepository
+import com.example.orientation_app.domain.usecase.GetAiRecommendationsUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,10 +17,16 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [GetAiRecommendationsUseCase].
+ * Module tests — [GetAiRecommendationsUseCase] orchestration.
  *
- * All collaborators are mocked with MockK so these tests run on the JVM
- * without any Android or Room dependency.
+ * This use case coordinates three collaborators:
+ *  - [FiliereRepository] (DB query)
+ *  - [IAiService] (LLM call)
+ *  - [UserRepository] (interest persistence)
+ *
+ * All three are mocked so the tests run on the JVM without Android or Room, but
+ * the tests deliberately exercise the *interaction* between components rather
+ * than a single class in isolation — hence they live in the module layer.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GetAiRecommendationsUseCaseTest {
@@ -77,19 +84,16 @@ class GetAiRecommendationsUseCaseTest {
 
         val shortlisted = slot<List<ScoredProgram>>()
         coEvery { filiereRepository.getEligibleOnce(any(), any()) } returns listOf(
-            literatureProgram,
-            aiProgram,
-            duplicateAiProgram,
-            otherTechProgram
+            literatureProgram, aiProgram, duplicateAiProgram, otherTechProgram
         )
         coEvery { aiService.getRecommendations(any(), any(), any(), capture(shortlisted)) } returns sampleRecs
 
         useCase("info", "علوم إعلامية", 160.0, "مهتم بالذكاء الاصطناعي")
 
         val codes = shortlisted.captured.map { it.code }
-        // Duplicate (CS-01 appears twice) must be collapsed to one entry.
+        // Duplicate code CS-01 must be collapsed to one entry.
         assertThat(codes.count { it == "CS-01" }).isEqualTo(1)
-        // Both tech programmes must be present and appear before the literature one.
+        // Both tech programmes present and ranked before literature.
         assertThat(codes).contains("CS-01")
         assertThat(codes).contains("CS-02")
         assertThat(codes).contains("LIT-01")
@@ -98,7 +102,7 @@ class GetAiRecommendationsUseCaseTest {
         val litPos  = codes.indexOf("LIT-01")
         assertThat(cs01Pos).isLessThan(litPos)
         assertThat(cs02Pos).isLessThan(litPos)
-        // The programme with an explicit AI keyword in its name ranks first.
+        // Programme with explicit AI keyword in its name must rank first.
         assertThat(codes.first()).isEqualTo("CS-01")
     }
 
@@ -204,8 +208,7 @@ class GetAiRecommendationsUseCaseTest {
     }
 
     @Test fun `interest persistence failure does not abort the flow`() = runTest {
-        // userRepository is relaxed — all calls succeed silently by default.
-        // Override to throw; the use-case must swallow it and continue.
+        // Override relaxed mock to throw; the use-case must swallow it and continue.
         coEvery { userRepository.updateInterests(any()) } throws RuntimeException("DB error")
         coEvery { filiereRepository.getEligibleOnce(any(), any()) } returns listOf(sampleProgram)
         coEvery { aiService.getRecommendations(any(), any(), any(), any()) } returns sampleRecs

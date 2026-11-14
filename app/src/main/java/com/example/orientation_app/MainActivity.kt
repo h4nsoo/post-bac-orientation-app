@@ -25,6 +25,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.orientation_app.domain.usecase.GetSectionSubjectsUseCase
+import com.example.orientation_app.navigation.NavRoutes
 import com.example.orientation_app.ui.screens.confirmation.ConfirmationScreen
 import com.example.orientation_app.ui.screens.next.NextPageScreen
 import com.example.orientation_app.ui.screens.results.ResultsScreen
@@ -33,7 +35,6 @@ import com.example.orientation_app.ui.screens.welcome.WelcomeScreen
 import com.example.orientation_app.ui.theme.UnicompassTheme
 import com.example.orientation_app.viewmodel.ScoreViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Locale
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -81,19 +82,6 @@ private fun backExitTransition(): ExitTransition =
         animationSpec = tween(ANIM_DURATION, easing = FastOutLinearInEasing)
     ) + fadeOut(tween(ANIM_DURATION, easing = FastOutLinearInEasing))
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-private fun sectionIdToName(sectionId: String): String = when (sectionId) {
-    "math"       -> "رياضيات"
-    "science"    -> "علوم تجريبية"
-    "tech"       -> "علوم تقنية"
-    "info"       -> "علوم اعلامية"
-    "literature" -> "آداب"
-    "economy"    -> "اقتصاد و تصرف"
-    "sports"     -> "رياضة"
-    else         -> sectionId
-}
-
 // ── Navigation host ───────────────────────────────────────────────────────────
 
 @Composable
@@ -105,27 +93,27 @@ private fun UnicompassNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = "welcome",
+        startDestination = NavRoutes.WELCOME,
         enterTransition = { forwardEnterTransition() },
         exitTransition = { forwardExitTransition() },
         popEnterTransition = { backEnterTransition() },
         popExitTransition = { backExitTransition() }
     ) {
 
-        composable(route = "welcome") {
+        composable(route = NavRoutes.WELCOME) {
             WelcomeScreen(
                 viewModel = hiltViewModel(),
                 onContinue = { sectionId, optionalSubject, isSportExempt ->
                     val encodedOptional = Uri.encode(optionalSubject)
                     navController.navigate(
-                        "score_entry/$sectionId?optionalSubject=$encodedOptional&sportExempt=$isSportExempt"
+                        "score_entry/$sectionId?optionalSubject=$encodedOptional&sportExempt=$isSportExempt" // route built per NavRoutes.SCORE_ENTRY_PATTERN
                     )
                 }
             )
         }
 
         composable(
-            route = "score_entry/{sectionId}?optionalSubject={optionalSubject}&sportExempt={sportExempt}",
+            route = NavRoutes.SCORE_ENTRY_PATTERN,
             arguments = listOf(
                 navArgument("sectionId")       { type = NavType.StringType },
                 navArgument("optionalSubject") { type = NavType.StringType; defaultValue = "" },
@@ -144,37 +132,35 @@ private fun UnicompassNavHost() {
                 selectedOptionalSubject = optionalSubject,
                 isSportExempt          = sportExempt,
                 onBackClick            = { navController.popBackStack() },
-                onFilterClick          = { navController.navigate("confirmation") }
+                onFilterClick          = { navController.navigate(NavRoutes.CONFIRMATION) }
             )
         }
 
-        composable(route = "confirmation") {
+        composable(route = NavRoutes.CONFIRMATION) {
             ConfirmationScreen(
                 viewModel   = scoreViewModel,
                 onBackClick = { navController.popBackStack() },
-                onDoneClick = { navController.navigate("next_page") }
+                onDoneClick = { navController.navigate(NavRoutes.NEXT_PAGE) }
             )
         }
 
-        composable(route = "next_page") {
+        composable(route = NavRoutes.NEXT_PAGE) {
             val scoreState by scoreViewModel.uiState.collectAsState()
             NextPageScreen(
                 onBackClick     = { navController.popBackStack() },
                 onContinueClick = { interestText ->
                     if (scoreState.sectionId.isBlank()) return@NextPageScreen
                     val encodedInterest = Uri.encode(interestText)
-                    val fgScoreStr = Uri.encode(
-                        String.format(Locale.US, "%.4f", scoreState.fgScore)
-                    )
+                    val fgScoreStr = Uri.encode(NavRoutes.formatScore(scoreState.fgScore))
                     navController.navigate(
-                        "results/${scoreState.sectionId}/$fgScoreStr/$encodedInterest"
+                        "results/${scoreState.sectionId}/$fgScoreStr/$encodedInterest" // route built per NavRoutes.RESULTS_PATTERN
                     )
                 }
             )
         }
 
         composable(
-            route = "results/{sectionId}/{fgScore}/{interestText}",
+            route = NavRoutes.RESULTS_PATTERN,
             arguments = listOf(
                 navArgument("sectionId")    { type = NavType.StringType },
                 navArgument("fgScore")      { type = NavType.StringType },
@@ -190,7 +176,7 @@ private fun UnicompassNavHost() {
             )
             ResultsScreen(
                 sectionId    = sectionId,
-                sectionName  = sectionIdToName(sectionId),
+                sectionName  = GetSectionSubjectsUseCase.displayName(sectionId),
                 fgScore      = fgScore,
                 interestText = interestText,
                 onBackClick  = { navController.popBackStack() },

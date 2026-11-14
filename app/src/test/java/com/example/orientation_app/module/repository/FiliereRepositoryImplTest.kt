@@ -1,7 +1,8 @@
-package com.example.orientation_app.data.repository
+package com.example.orientation_app.module.repository
 
 import com.example.orientation_app.data.dao.FiliereDao
 import com.example.orientation_app.data.entity.FiliereMaster
+import com.example.orientation_app.data.repository.FiliereRepositoryImpl
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,23 +14,28 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [FiliereRepositoryImpl].
+ * Module tests — [FiliereRepositoryImpl] data-layer contract.
  *
- * The Room [FiliereDao] is mocked with MockK so no Android context or in-memory
- * database setup is required. These tests verify:
- *  - Correct DAO delegation (sectionBit and userScore forwarded unchanged).
- *  - Entity-to-domain mapping via [toDomain] (all fields preserved).
- *  - Empty-list and limit-boundary edge cases.
+ * These tests verify the interaction between the repository and its DAO, plus
+ * the [FiliereMaster] → [com.example.orientation_app.domain.model.ScoredProgram]
+ * mapping performed by the data module. The DAO is mocked with MockK so no
+ * Android context or in-memory database is required.
  *
- * For full SQL integration tests (bitwise eligibility, ordering, score filter)
- * see the instrumented test suite.
+ * These are classified as **module tests** (not unit tests) because:
+ *  - They exercise the collaboration between [FiliereRepositoryImpl],
+ *    [FiliereDao], and the mapping logic in one scenario.
+ *  - The [UnconfinedTestDispatcher] is injected to stand in for the production
+ *    IO dispatcher, making dispatcher injection part of what is being verified.
+ *
+ * For full SQL integration tests (bitwise eligibility filter, score ordering)
+ * see the instrumented test suite in androidTest/.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class FiliereRepositoryImplTest {
 
-    // UnconfinedTestDispatcher runs withContext() blocks immediately on the calling
-    // thread, avoiding the deadlock that StandardTestDispatcher causes when used as
-    // an IO dispatcher inside runTest.
+    // UnconfinedTestDispatcher runs withContext() blocks immediately on the
+    // calling thread, avoiding the deadlock that StandardTestDispatcher causes
+    // when used as an IO dispatcher inside runTest.
     private val testDispatcher = UnconfinedTestDispatcher()
     private val dao            = mockk<FiliereDao>()
     private lateinit var repository: FiliereRepositoryImpl
@@ -59,7 +65,7 @@ class FiliereRepositoryImplTest {
         sectionEligibility = sectionBit
     )
 
-    // ── getEligibleOnce — DAO delegation ──────────────────────────────────────
+    // ── DAO delegation ────────────────────────────────────────────────────────
 
     @Test fun `getEligibleOnce - delegates sectionBit and userScore to dao`() = runTest {
         coEvery { dao.filterEligibleOnce(1, 160.0) } returns emptyList()
@@ -77,7 +83,7 @@ class FiliereRepositoryImplTest {
         assertThat(result).isEmpty()
     }
 
-    // ── getEligibleOnce — entity → domain mapping ─────────────────────────────
+    // ── Entity → domain mapping ───────────────────────────────────────────────
 
     @Test fun `getEligibleOnce - maps entity list to domain model list`() = runTest {
         val entities = listOf(fakeEntity(1, 150.0, 1), fakeEntity(2, 160.0, 3))
@@ -106,7 +112,7 @@ class FiliereRepositoryImplTest {
         assertThat(program.sectionEligibility).isEqualTo(3)
     }
 
-    // ── getEligibleOnce — section bit semantics (contract, not SQL) ───────────
+    // ── Section bit semantics (contract, not SQL) ─────────────────────────────
 
     @Test fun `getEligibleOnce - passes math bit 1 correctly`() = runTest {
         coEvery { dao.filterEligibleOnce(1, any()) } returns emptyList()

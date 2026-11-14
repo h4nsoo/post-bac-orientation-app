@@ -1,9 +1,11 @@
-package com.example.orientation_app.viewmodel
+package com.example.orientation_app.unit.viewmodel
 
 import app.cash.turbine.test
 import com.example.orientation_app.domain.model.Recommendation
 import com.example.orientation_app.domain.model.ScoredProgram
 import com.example.orientation_app.domain.usecase.GetAiRecommendationsUseCase
+import com.example.orientation_app.viewmodel.AiUiState
+import com.example.orientation_app.viewmodel.AiViewModel
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,7 +22,7 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [AiViewModel].
+ * Unit tests — [AiViewModel] in isolation.
  *
  * [StandardTestDispatcher] is installed on [Dispatchers.Main] so that
  * [viewModelScope] coroutines only advance when the test explicitly calls
@@ -121,9 +123,6 @@ class AiViewModelTest {
 
     @Test fun `getRecommendation - is a no-op when already Loading`() = runTest {
         // Park the use-case so the coroutine stays suspended in Loading.
-        // StandardTestDispatcher is lazy — runCurrent() advances the launch body
-        // to its first suspension point (the useCase call) before the second
-        // getRecommendation invocation sees Loading and short-circuits.
         val gate = CompletableDeferred<List<Recommendation>>()
         coEvery { useCase(any(), any(), any(), any()) } coAnswers { gate.await() }
 

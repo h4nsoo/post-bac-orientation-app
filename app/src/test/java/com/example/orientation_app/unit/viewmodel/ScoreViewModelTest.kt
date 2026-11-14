@@ -1,14 +1,15 @@
-package com.example.orientation_app.viewmodel
+package com.example.orientation_app.unit.viewmodel
 
 import com.example.orientation_app.domain.model.SubjectKey
 import com.example.orientation_app.domain.scoring.SectionScoreCalculator
 import com.example.orientation_app.domain.usecase.GetSectionSubjectsUseCase
+import com.example.orientation_app.viewmodel.ScoreViewModel
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [ScoreViewModel].
+ * Unit tests — [ScoreViewModel] in isolation.
  *
  * No Android framework or coroutine test setup is required because
  * [ScoreViewModel] uses only synchronous [kotlinx.coroutines.flow.StateFlow.update]

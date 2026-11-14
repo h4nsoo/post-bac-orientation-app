@@ -1,11 +1,12 @@
-package com.example.orientation_app.viewmodel
+package com.example.orientation_app.unit.viewmodel
 
+import com.example.orientation_app.viewmodel.WelcomeViewModel
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [WelcomeViewModel].
+ * Unit tests — [WelcomeViewModel] in isolation.
  *
  * No Android framework or coroutine test infrastructure needed — the ViewModel
  * uses only synchronous [kotlinx.coroutines.flow.StateFlow.update] calls.
@@ -96,7 +97,6 @@ class WelcomeViewModelTest {
 
     @Test fun `canProceed is true with only a section selected and no optional subject`() {
         viewModel.toggleSection("economy")
-        // selectedOptionalSubject is empty — that is now explicitly allowed.
         assertThat(viewModel.uiState.value.selectedOptionalSubject).isEmpty()
         assertThat(viewModel.uiState.value.canProceed).isTrue()
     }
